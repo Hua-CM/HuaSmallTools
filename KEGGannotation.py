@@ -53,4 +53,5 @@ def gene2map(ko2map_df):
     gene2ko["ko"] = gene2ko.ko.apply(lambda x: str.strip(x, "ko:"))
     gene2map_df = pd.merge(gene2ko, ko2map_df, on="ko", how="left").dropna()
     gene2map_df = gene2map_df[["pathway", "gene"]]
+    gene2map_df.to_csv(r"E:\Tianma_data\genome\pathway2gene.map", sep="\t", index=False)
     return gene2map_df
