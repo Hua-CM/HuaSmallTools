@@ -1,0 +1,102 @@
+# -*- coding: utf-8 -*-
+# @Time : 2019/10/25 10:46
+# @Author : Zhongyi Hua
+# @FileName: parse_eggNOG.py
+# @Usage: """non-module organisms are always lack of KEGG and GO information. A convenient method is use eggNOG server to
+#            annotate. This script is used for parse the eggNOG result to a user friendly format which could be directly
+#            applied in clusterProfile R package"""
+# @E-mail: njbxhzy@hotmail.com
+import pandas as pd
+import numpy as np
+import argparse
+import requests
+import os
+
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"}
+
+
+def get_KEGGmap():
+    """
+    INPUT:None
+    :return: KO2map_df:columns: [KO,pathway]
+             KEGGmap_df: columns: [pathway, description]
+    """
+    # KEGG map description
+    KEGGmap = requests.get("http://rest.kegg.jp/list/pathway/", headers=headers).text
+    KEGGmap = map(lambda x: str.split(x, "\t"), KEGGmap.split("\n"))
+    KEGGmap_df = pd.DataFrame(KEGGmap, columns=["pathway", "description"]).dropna()
+    KEGGmap_df["pathway"] = KEGGmap_df.pathway.apply(lambda x: str.strip(x, "path:"))
+    # KEGG KO2map
+    KO2map = requests.get("http://rest.kegg.jp/link/pathway/ko", headers=headers).text
+    KO2map = map(lambda x: str.split(x, "\t"), KO2map.split("\n"))
+    KO2map_df = pd.DataFrame(KO2map, columns=["ko", "pathway"]).dropna()
+    KO2map_df["pathway"] = KO2map_df.pathway.apply(lambda x: str.strip(x, "path:"))
+    KO2map_df["KO"] = KO2map_df.ko.apply(lambda x: str.strip(x, "ko:"))
+    return KO2map_df, KEGGmap_df
+
+
+def parse_KO_f1(query_line):
+    """
+    :param query_line: a line in eggNOG annotation file which contains a query result
+    :return:  a dict for parse_KO function. eg. {"gene":gene name,"KO": KO}
+    """
+    KO_list = [i for i in map(lambda x: x.lstrip("ko:"), query_line["KEGG KO"].split(","))]
+    return {"gene": query_line["Query"], "KO": KO_list}
+
+
+def parse_KO(df4parse):
+    """
+    parse the KEGG part in eggNOG annotation file
+    :param df4parse: the pd.Dataframe object directly comes from the eggNOG annotation file(skip the comment lines, of course)
+    :return:the parsed KEGG annotation in pd.Dataframe.
+    """
+    KO2map, KEGGmap = get_KEGGmap()
+    gene2KO = df4parse[["Query", "KEGG KO"]].dropna().apply(parse_KO_f1, axis=1, result_type="expand")
+    gene2KO = pd.DataFrame({'gene': gene2KO.gene.repeat(gene2KO["KO"].str.len()), 'KO': np.concatenate(gene2KO["KO"].values)})
+    gene2map = pd.merge(gene2KO, KO2map, on="KO", how="left")
+    gene2map = pd.merge(gene2map, KEGGmap, on="pathway", how="left")
+    return gene2map.dropna()
+
+
+def parse_GO_f1(query_line):
+    """
+    :param query_line: a line in eggNOG annotation file which contains a query result
+    :return:  a dict for parse_KO function. eg. {"gene":gene name,"GO": KO}
+    """
+    KO_list = [i for i in query_line["GO terms"].split(",")]
+    return {"gene": query_line["Query"], "GO": KO_list}
+
+
+def parse_GO(df4parse, GO_path):
+    """
+    parse the KEGG part in eggNOG annotation file
+    :param df4parse: the pd.Dataframe object directly comes from the eggNOG annotation file(skip the comment lines, of course)
+    :return:the parsed GO annotation in pd.Dataframe.
+    """
+    gene2GO = df4parse[["Query", "GO terms"]].dropna().apply(parse_GO_f1, axis=1, result_type="expand")
+    gene2GO = pd.DataFrame(
+        {'gene': gene2GO.gene.repeat(gene2GO["GO"].str.len()), 'GO': np.concatenate(gene2GO["GO"].values)})
+    GO_df = pd.read_csv(GO_path, sep="\t", names=["GO", "Description", "level"])
+    gene2GO = pd.merge(gene2GO, GO_df, on="GO", how="left")
+    return gene2GO
+
+
+def main(input_file, out_dir, go_file):
+    file4parse = pd.read_csv(input_file, sep="\t", skiprows=4)
+    file4KO = parse_KO(file4parse)[["gene", "KO", "pathway", "description"]]
+    file4GO = parse_GO(file4parse, go_file)
+    file4KO.to_csv(os.path.join(out_dir, "KOannotation.tsv"), sep="\t", index=False)
+    file4GO.to_csv(os.path.join(out_dir, "GOannotation.tsv"), sep="\t", index=False)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="This is the script for parsing eggNOGv2 annotation file to the file \
+                                                  which ClusterProfile need")
+    parser.add_argument('-i', '--input_file', required=True,
+                        help='<filepath>  The eggNOG annotation file')
+    parser.add_argument('-g', '--go_file', required=True,
+                        help='<filepath>  The GO database file(come from parse_go_obofile.py)')
+    parser.add_argument('-o', '--output_directory', required=True,
+                        help='<dirpath>  the directory for results')
+    args = parser.parse_args()
+    main(args.input_file, args.output_directory, args.go_file)
