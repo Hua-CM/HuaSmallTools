@@ -2,36 +2,64 @@
 # @Time : 2019/10/25 10:46
 # @Author : Zhongyi Hua
 # @FileName: parse_eggNOG.py
-# @Usage: """non-module organisms are always lack of KEGG and GO information. A convenient method is use eggNOG server to
-#            annotate. This script is used for parse the eggNOG result to a user friendly format which could be directly
-#            applied in clusterProfile R package"""
+# @Usage: """non-module organisms are always lack of KEGG and GO information. A convenient method is use eggNOG server
+#            to annotate. This script is used for parse the eggNOG result to a user friendly format which could be
+#            directly applied in clusterProfile R package"""
 # @E-mail: njbxhzy@hotmail.com
 import pandas as pd
 import numpy as np
 import argparse
 import requests
+import re
 import os
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"}
 
 
-def get_KEGGmap():
+def get_html(url):
+    resp = requests.get(url, headers=headers)
+    return resp.text
+
+
+def own_mapdb(org_list):
     """
-    INPUT:None
+    Pick map num based on user prefer
+    :param org_list:organism name list (KEGG abb). eg. ["ath","osa","dosa",.....]
+    :return: own_maplist: The picked map num: eg. [map0001,map0002,.....,map1111]
+    """
+    if not org_list == ["all"]:
+        map_set = set()
+        for org in org_list:
+            tmp = get_html("http://rest.kegg.jp/list/pathway/"+org)
+            tmp = map(lambda x: str.split(x, "\t"), tmp.split("\n"))
+            tmp_df = pd.DataFrame(tmp, columns=["pathway", "description"]).dropna()
+            map_set = map_set.union(set(tmp_df.pathway.apply(lambda x: re.search("[0-9]{5}", str(x)).group())))
+        map_list = list(map(lambda x: "map"+x, list(map_set)))
+        return map_list
+    else:
+        return None
+
+
+def get_KEGGmap(own_maplist):
+    """
+    INPUT:own_maplist: The picked map num: eg. [map0001,map0002,.....,map1111]
     :return: KO2map_df:columns: [KO,pathway]
              KEGGmap_df: columns: [pathway, description]
     """
     # KEGG map description
-    KEGGmap = requests.get("http://rest.kegg.jp/list/pathway/", headers=headers).text
+    KEGGmap = get_html("http://rest.kegg.jp/list/pathway/")
     KEGGmap = map(lambda x: str.split(x, "\t"), KEGGmap.split("\n"))
     KEGGmap_df = pd.DataFrame(KEGGmap, columns=["pathway", "description"]).dropna()
     KEGGmap_df["pathway"] = KEGGmap_df.pathway.apply(lambda x: str.strip(x, "path:"))
     # KEGG KO2map
-    KO2map = requests.get("http://rest.kegg.jp/link/pathway/ko", headers=headers).text
+    KO2map = get_html("http://rest.kegg.jp/link/pathway/ko")
     KO2map = map(lambda x: str.split(x, "\t"), KO2map.split("\n"))
     KO2map_df = pd.DataFrame(KO2map, columns=["ko", "pathway"]).dropna()
     KO2map_df["pathway"] = KO2map_df.pathway.apply(lambda x: str.strip(x, "path:"))
     KO2map_df["KO"] = KO2map_df.ko.apply(lambda x: str.strip(x, "ko:"))
+    if own_maplist:
+        KEGGmap_df = KEGGmap_df[KEGGmap_df["pathway"].isin(own_maplist)]
+        KO2map_df = KO2map_df[KO2map_df["pathway"].isin(own_maplist)]
     return KO2map_df, KEGGmap_df
 
 
@@ -44,13 +72,13 @@ def parse_KO_f1(query_line):
     return {"gene": query_line["Query"], "KO": KO_list}
 
 
-def parse_KO(df4parse):
+def parse_KO(df4parse, org_list):
     """
     parse the KEGG part in eggNOG annotation file
     :param df4parse: the pd.Dataframe object directly comes from the eggNOG annotation file(skip the comment lines, of course)
     :return:the parsed KEGG annotation in pd.Dataframe.
     """
-    KO2map, KEGGmap = get_KEGGmap()
+    KO2map, KEGGmap = get_KEGGmap(own_mapdb(org_list))
     gene2KO = df4parse[["Query", "KEGG KO"]].dropna().apply(parse_KO_f1, axis=1, result_type="expand")
     gene2KO = pd.DataFrame({'gene': gene2KO.gene.repeat(gene2KO["KO"].str.len()), 'KO': np.concatenate(gene2KO["KO"].values)})
     gene2map = pd.merge(gene2KO, KO2map, on="KO", how="left")
@@ -81,9 +109,9 @@ def parse_GO(df4parse, GO_path):
     return gene2GO
 
 
-def main(input_file, out_dir, go_file):
+def main(input_file, out_dir, go_file, org_list):
     file4parse = pd.read_csv(input_file, sep="\t", skiprows=4)
-    file4KO = parse_KO(file4parse)[["gene", "KO", "pathway", "description"]]
+    file4KO = parse_KO(file4parse, org_list)[["gene", "KO", "pathway", "description"]]
     file4GO = parse_GO(file4parse, go_file)
     file4KO.to_csv(os.path.join(out_dir, "KOannotation.tsv"), sep="\t", index=False)
     file4GO.to_csv(os.path.join(out_dir, "GOannotation.tsv"), sep="\t", index=False)
@@ -96,7 +124,10 @@ if __name__ == '__main__':
                         help='<filepath>  The eggNOG annotation file')
     parser.add_argument('-g', '--go_file', required=True,
                         help='<filepath>  The GO database file(come from parse_go_obofile.py)')
+    parser.add_argument('-O', '--org_list', nargs="?", const=1, default="all",
+                        help='<organism name>  The reference organisms in KEGG database(use KEGG abb. please).If not \
+                        specified, it will use all pathway.')
     parser.add_argument('-o', '--output_directory', required=True,
                         help='<dirpath>  the directory for results')
     args = parser.parse_args()
-    main(args.input_file, args.output_directory, args.go_file)
+    main(args.input_file, args.output_directory, args.go_file, args.org_list.split(","))
