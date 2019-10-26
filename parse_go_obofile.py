@@ -16,7 +16,7 @@ def main(input_path, output_path):
     :param output_path: result file path.
     :return: None
     """
-    go_annotation = pd.DataFrame(columns=["GO", "Description", "Space"])
+    go_annotation = pd.DataFrame(columns=["GO", "Description", "level"])
     with open(input_path, 'r', encoding='utf8') as f:
         cont = True
         cont_num = 0
@@ -32,11 +32,15 @@ def main(input_path, output_path):
             else:
                 try:
                     if cont_num == 2:
-                        append_dict.update({"GO": re.search("GO:[0-9]{7}", cont).group()})
+                        a = re.search("GO:[0-9]{7}", cont).group()
                     elif cont_num == 3:
-                        append_dict.update({"Description": re.search("name: .*", cont).group()[6:]})
+                        b = re.search("name: .*", cont).group()[6:]
                     elif cont_num == 4:
-                        append_dict.update({"Space": re.search("namespace: .*", cont).group()[11:]})
+                        c = re.search("namespace: .*", cont).group()[11:]
+                        append_dict = {"GO": a, "Description": b, "level": c}
+                    elif re.match("alt_id", cont).group():
+                        append_dict2 = {"GO": re.search("GO:[0-9]{7}", cont).group(), "Description": b, "level": c}
+                        go_annotation = go_annotation.append(append_dict2, ignore_index=True)
                 except AttributeError:
                     if cont_num == 2:
                         append_dict.update({"GO": None})
