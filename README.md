@@ -8,7 +8,7 @@ For now, I assort the scripts into three functions:convert, parse and spider.
 ### parse scripts
 These scripts mainly used for parse results for multiple Databases. eg.KEGG, GO, NCBI
 1. parse_eggNOG.py
-2. parse_KEGGkolist.py
+2. parse_KEGGkolist.py  
 This scripts was used for parse KOALA web server results to a more user-friendly format. And could be directly used for clusterProfile.
 ### convert scripts
 Actually, just some simple id-mapping scripts
