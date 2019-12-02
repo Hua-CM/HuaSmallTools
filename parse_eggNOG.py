@@ -110,7 +110,7 @@ def parse_GO(df4parse, GO_path):
 
 
 def main(input_file, out_dir, go_file, org_list):
-    file4parse = pd.read_csv(input_file, sep="\t", skiprows=4)
+    file4parse = pd.read_csv(input_file, sep="\t", comment="#")
     file4KO = parse_KO(file4parse, org_list)[["gene", "KO", "pathway", "description"]]
     file4GO = parse_GO(file4parse, go_file)
     file4KO.to_csv(os.path.join(out_dir, "KOannotation.tsv"), sep="\t", index=False)
