@@ -68,7 +68,7 @@ def parse_KO_f1(query_line):
     :param query_line: a line in eggNOG annotation file which contains a query result
     :return:  a dict for parse_KO function. eg. {"gene":gene name,"KO": KO}
     """
-    KO_list = [i for i in map(lambda x: x.lstrip("ko:"), query_line["KEGG KO"].split(","))]
+    KO_list = [i for i in map(lambda x: x.lstrip("ko:"), query_line["KEGG_ko"].split(","))]
     return {"gene": query_line["Query"], "KO": KO_list}
 
 
@@ -79,7 +79,7 @@ def parse_KO(df4parse, org_list):
     :return:the parsed KEGG annotation in pd.Dataframe.
     """
     KO2map, KEGGmap = get_KEGGmap(own_mapdb(org_list))
-    gene2KO = df4parse[["Query", "KEGG KO"]].dropna().apply(parse_KO_f1, axis=1, result_type="expand")
+    gene2KO = df4parse[["Query", "KEGG_ko"]].dropna().apply(parse_KO_f1, axis=1, result_type="expand")
     gene2KO = pd.DataFrame({'gene': gene2KO.gene.repeat(gene2KO["KO"].str.len()), 'KO': np.concatenate(gene2KO["KO"].values)})
     gene2map = pd.merge(gene2KO, KO2map, on="KO", how="left")
     gene2map = pd.merge(gene2map, KEGGmap, on="pathway", how="left")
@@ -91,7 +91,7 @@ def parse_GO_f1(query_line):
     :param query_line: a line in eggNOG annotation file which contains a query result
     :return:  a dict for parse_KO function. eg. {"gene":gene name,"GO": KO}
     """
-    KO_list = [i for i in query_line["GO terms"].split(",")]
+    KO_list = [i for i in query_line["GOs"].split(",")]
     return {"gene": query_line["Query"], "GO": KO_list}
 
 
@@ -101,7 +101,7 @@ def parse_GO(df4parse, GO_path):
     :param df4parse: the pd.Dataframe object directly comes from the eggNOG annotation file(skip the comment lines, of course)
     :return:the parsed GO annotation in pd.Dataframe.
     """
-    gene2GO = df4parse[["Query", "GO terms"]].dropna().apply(parse_GO_f1, axis=1, result_type="expand")
+    gene2GO = df4parse[["Query", "GOs"]].dropna().apply(parse_GO_f1, axis=1, result_type="expand")
     gene2GO = pd.DataFrame(
         {'gene': gene2GO.gene.repeat(gene2GO["GO"].str.len()), 'GO': np.concatenate(gene2GO["GO"].values)})
     GO_df = pd.read_csv(GO_path, sep="\t", names=["GO", "Description", "level"])
@@ -110,7 +110,7 @@ def parse_GO(df4parse, GO_path):
 
 
 def main(input_file, out_dir, go_file, org_list):
-    file4parse = pd.read_csv(input_file, sep="\t", comment="#")
+    file4parse = pd.read_csv(input_file, sep="\t", comment="#", usecols=[0, 6, 8], names=['Query', 'GOs', "KEGG_ko"])
     file4KO = parse_KO(file4parse, org_list)[["gene", "KO", "pathway", "description"]]
     file4GO = parse_GO(file4parse, go_file)
     file4KO.to_csv(os.path.join(out_dir, "KOannotation.tsv"), sep="\t", index=False)
