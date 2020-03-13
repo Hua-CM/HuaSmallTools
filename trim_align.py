@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="This is the script for simple trim MSA file")
     parser.add_argument('-i', '--input_file', required=True,
                         help='<file_path> The MSA file in fasta format')
-    parser.add_argument('-m', '--miss_match', default=0, type=int,
+    parser.add_argument('-m', '--miss_match', default=0, type=float,
                         help='<float> The miss match value used for trimming')
     parser.add_argument('-o', '--output_file', required=True,
                         help='<file_path> The result MSA file in format')
