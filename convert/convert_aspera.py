@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time : 2019/10/26 11:08
 # @Author : Zhongyi Hua
-# @FileName: convert_SRR.py
+# @FileName: convert_aspera.py
 # @Usage:
 # @Note:
 # @E-mail: njbxhzy@hotmail.com
