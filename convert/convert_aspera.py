@@ -35,7 +35,7 @@ def convert_fastq(input_file, output_file):
             srr_list = list(chain.from_iterable([x.split(";") for x in srr_list.split("\n")[1:]]))
             srr_list = [re.sub("ftp\\.sra\\.ebi\\.ac\\.uk", "era-fasp@fasp.sra.ebi.ac.uk:", x) for x in srr_list]
             with open(output_file, "a") as f:
-                f.writelines("\n".join([sra_number.strip() +"\t" + x for x in srr_list[:-1]]))
+                f.writelines("\n".join([sra_number.strip() + "\t" + x for x in srr_list[:-1]]))
 
 
 if __name__ == '__main__':

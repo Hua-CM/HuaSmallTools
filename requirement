@@ -1,0 +1,5 @@
+python==3.7.0
+biopython==1.7.3
+pyquery==1.4.1
+gffutils==0.10.1
+pandas==1.0.1
