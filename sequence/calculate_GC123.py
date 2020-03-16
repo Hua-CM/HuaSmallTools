@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time : 2020/3/16 15:12
 # @Author : Zhongyi Hua
-# @FileName: GC123.py
+# @FileName: calculate_GC123.py
 # @Usage: 
 # @Note:
 # @E-mail: njbxhzy@hotmail.com

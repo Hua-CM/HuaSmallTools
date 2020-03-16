@@ -35,6 +35,8 @@ A simple scirpt to trim alignment before construct the tree.
 3. [extract_cds_prokka](sequence/extract_cds_prokka.py)  
 Prokka results exclude the cds sequence file. This script could do this job.  
 *Notes:* This script could only be used for prokaryote. And gff file from different software,in my experience
-were different more or less. So, if you use it in places other than Prokka results, Please be careful. 
+were different more or less. So, if you use it in places other than Prokka results, Please be careful.
+4. [calculate_GC123.py](sequence/calculate_GC123.py)  
+The in-house scirpt for calculating GC123, which are necessary in  codon usage bias analysis.
 ## Contact me
 If you have any question in using these scripts or any advices, please feel free to contact me by njbxhzy@126.com.
