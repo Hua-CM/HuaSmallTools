@@ -20,6 +20,7 @@ def calculate123(seq_path):
         tmp_dict["GC"], tmp_dict["GC1"], tmp_dict["GC2"], tmp_dict["GC3"] = GC123(record.seq)
         tmp_dict["GC12"] = (tmp_dict["GC1"] + tmp_dict["GC2"])/2
         result_df = result_df.append(tmp_dict, sort=False, ignore_index=True)
+        result_df.iloc[:, 1:] = result_df.iloc[:, 1:]/100
     return result_df
 
 
