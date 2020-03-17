@@ -9,7 +9,7 @@
 from Bio.SeqUtils import GC123
 from Bio import SeqIO
 import pandas as pd
-from calculate_motif import motif123
+from sequence.calculate_motif import motif123
 
 
 def calculate123(seq_path):
