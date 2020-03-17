@@ -33,15 +33,25 @@ def motif123(seq, motif):
     gc = {}
     gcall = 0
     nall = 0
-    for i in range(0, 3):
-        try:
-            n = d["G"][i] + d["C"][i] + d["T"][i] + d["A"][i]
-            gc[i] = np.array(itemgetter(*motif)(d))[:, i].sum() * 100.0 / n
-        except Exception:
-            gc[i] = 0
+    if motif.__len__() == 1:
+        for i in range(0, 3):
+            try:
+                n = d["G"][i] + d["C"][i] + d["T"][i] + d["A"][i]
+                gc[i] = np.array(itemgetter(*motif)(d))[i].sum() * 100.0 / n
+            except Exception:
+                gc[i] = 0
 
-        gcall = gcall + np.array(itemgetter(*motif)(d))[:, i].sum()
-        nall = nall + n
+            gcall = gcall + np.array(itemgetter(*motif)(d))[i].sum()
+            nall = nall + n
+    else:
+        for i in range(0, 3):
+            try:
+                n = d["G"][i] + d["C"][i] + d["T"][i] + d["A"][i]
+                gc[i] = np.array(itemgetter(*motif)(d))[:, i].sum() * 100.0 / n
+            except Exception:
+                gc[i] = 0
 
+            gcall = gcall + np.array(itemgetter(*motif)(d))[:, i].sum()
+            nall = nall + n
     gcall = 100.0 * gcall / nall
     return gcall, gc[0], gc[1], gc[2]
