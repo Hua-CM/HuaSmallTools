@@ -71,6 +71,10 @@ class CodonAnalysis(object):
             self.table["GC3"]*100, self.table["GC12"]*100)
         y_data = [slope * x + intercept for x in x_data]
         ax.plot(x_data, y_data, "r-")
+        ax.set_xlim([30, 100])
+        ax.set_ylim([30, 80])
+        ax.set_xticks(np.arange(30, 110, 10))
+        ax.set_yticks(np.arange(30, 90, 10))
         plt.text(
             80, 70, "y={:.4f}x+{:.2f}\n$R^2$={:.4f}".format(slope, intercept, r_value**2))
         plt.savefig(os.path.join(self.out_dir, "neutrality_plot.pdf"))
