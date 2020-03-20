@@ -130,4 +130,4 @@ if __name__ == '__main__':
     analysis_instance.enc_plot()
     analysis_instance.neutrality_plot()
     analysis_instance.pr2plot()
-
+    analysis_instance.table.to_csv(os.path.join(args.out_dir, "indices_table.tsv"), sep="\t", index=False)
