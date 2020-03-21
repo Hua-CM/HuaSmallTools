@@ -7,7 +7,7 @@
 # @E-mail: njbxhzy@hotmail.com
 
 from sequence.calculate_GC123 import calculate_codon_analysis
-from scipy.stats import pearsonr
+from scipy.stats import spearmanr
 from scipy import stats
 import pandas as pd
 import numpy as np
@@ -90,8 +90,13 @@ class CodonAnalysis(object):
                 ["seqid"]))
         for var1 in self.table.columns.drop(["seqid"]):
             for var2 in self.table.columns.drop(["seqid"]):
-                pearson_v.loc[var1, var2], pearson_p.loc[var1, var2] = pearsonr(
+                cor_value, p_value = spearmanr(
                     self.table[var1], self.table[var2])
+                pearson_p.loc[var1, var2] = p_value
+                if p_value < 0.05:
+                    pearson_v.loc[var1, var2] = str(cor_value) + "*"
+                else:
+                    pearson_v.loc[var1, var2] = str(cor_value)
         pearson_p.to_csv(os.path.join(self.out_dir, "p_value.tsv"), sep="\t", index=False)
         pearson_v.to_csv(os.path.join(self.out_dir, "cor_value.tsv"), sep="\t", index=False)
 
