@@ -47,7 +47,7 @@ def main(input_path, output_path):
                     elif cont_num == 3:
                         append_dict.update({"Description": None})
                     elif cont_num == 4:
-                        append_dict.update({"Space": None})
+                        append_dict.update({"level": None})
         go_annotation.dropna().to_csv(output_path, sep="\t", index=False)
 
 
