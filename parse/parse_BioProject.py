@@ -9,29 +9,24 @@
 import re
 import pandas as pd
 
+biosample_pattern = {"biosample": "BioSample:(.*?)[;\n]",
+                     "sra_id": "SRA:(.*?)[;\n]",
+                     "host": "host=(.*?)\n",
+                     "source": "source=(.*?)\n",
+                     "sample_name": "Sample name:(.*?)[;\n]",
+                     "organism": "Organism:(.*?)[;\n]"
+                     }
 
-class Biosample:
-    def __init__(self, biosample_str):
+
+def biosample(biosample_record):
+    biosample_str = "".join(biosample_record)
+    biosample_dict = {}
+    for key, pattern in biosample_pattern.items():
         try:
-            self.biosample_id = re.search(r"SAMN[0-9]{8}", str(biosample_str)).group()
-        except AttributeError:
-            self.biosample_id = "NA"
-        try:
-            self.sra_id = re.search(r"SRS[0-9]{7}", str(biosample_str)).group()
-        except AttributeError:
-            self.sra_id = "NA"
-        try:
-            self.host = re.search("host=(.*?)\\\\n", str(biosample_str)).group()[6:-3]
-        except AttributeError:
-            self.host = "NA"
-        try:
-            self.source = re.search("source=(.*?)\\\\n", str(biosample_str)).group()[8:-3]
-        except AttributeError:
-            self.source = "NA"
-        try:
-            self.sample_name = re.search("Sample name:(.*?);", str(biosample_str)).group()[13:-1]
-        except AttributeError:
-            self.sample_name = "NA"
+            biosample_dict[key] = re.search(pattern, biosample_str).group(1).strip()
+        except:
+            biosample_dict[key] = "NA"
+    return biosample_dict
 
 
 if __name__ == '__main__':
@@ -43,18 +38,17 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output_tsv', required=True,
                         help='<file_path> The result table')
     args = parser.parse_args()
-    parse_results = pd.DataFrame(columns=["biosample_id", "sra_id", "host", "source", "sample_name"])
-    with open(args.input_txt_file, 'r', encoding='utf8') as f:
+    parse_results = pd.DataFrame(columns=["biosample", "sra_id", "host", "source", "sample_name", "organism"])
+    with open(args.input_txt, 'r', encoding='utf8') as f:
         cont = True
         li = []
         while cont:
             cont = f.readline()
             li.append(cont)
             if cont == '\n':
-                print(li)
                 if li == ["\n"]:
                     continue
                 else:
-                    parse_results = parse_results.append(vars(Biosample(li)), ignore_index=True)
+                    parse_results = parse_results.append(biosample(li), ignore_index=True)
                     li = []
     parse_results.to_csv(args.output_tsv, sep="\t", index=None)
