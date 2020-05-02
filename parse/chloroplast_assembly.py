@@ -38,14 +38,13 @@ def merge_contigs(mummer_df, seq_dictG):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description="This is the script for extracting cds from PROKKA result. Since Bio \
-                                                      could not parse its gbk result correctly")
+    parser = argparse.ArgumentParser(description="This is the script assists chloroplast assembly")
     parser.add_argument('-c', '--contigs_fasta', required=True,
                         help='<file_path> The contigs file in fasta format')
     parser.add_argument('-m', '--mummer', required=True,
-                        help='<file_path> The genome annotation file in gff format')
+                        help='<file_path> The nucmer result *.1coords')
     parser.add_argument('-o', '--putative_genome', required=True,
-                        help='<file_path> The cds sequence file in fasta format')
+                        help='<file_path> The result putative genomes with gaps in fasta format')
     args = parser.parse_args()
     seqdict = {}
     for x in SeqIO.parse(args.contigs_fasta, "fasta"):
