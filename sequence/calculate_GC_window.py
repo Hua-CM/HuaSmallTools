@@ -64,7 +64,7 @@ if __name__ == '__main__':
                                                  "be used in Circos")
     parser.add_argument('-i', '--input_file', required=True,
                         help='<filepath>  The genome fasta file')
-    parser.add_argument('-w', '--window', default=1000,
+    parser.add_argument('-w', '--window', default=1000, type=int,
                         help='<integer> Window length')
     parser.add_argument('-o', '--output_dir', required=True)
     args = parser.parse_args()
