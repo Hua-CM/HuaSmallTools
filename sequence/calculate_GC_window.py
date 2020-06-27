@@ -73,7 +73,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     genomeG = SeqIO.read(args.input_file, "fasta")
     df1 = gc_window(genomeG, args.window)
-    df1.to_csv(path.join(args.output_path, "GC.tsv"), sep="\t", index=False)
+    df1.to_csv(args.output_path, sep="\t", index=False)
     if args.skew:
         df2 = gc_skew_window(genomeG, args.window)
-        df2.to_csv(path.join(args.output_dir, "GC_skew.tsv"), sep="\t", index=False)
+        df2.to_csv(args.output_path + "GC_skew.tsv", sep="\t", index=False)
