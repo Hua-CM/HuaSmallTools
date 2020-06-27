@@ -64,12 +64,16 @@ if __name__ == '__main__':
                                                  "be used in Circos")
     parser.add_argument('-i', '--input_file', required=True,
                         help='<filepath>  The genome fasta file')
-    parser.add_argument('-w', '--window', default=1000, type=int,
+    parser.add_argument('-w', '--window', default=100, type=int,
                         help='<integer> Window length')
-    parser.add_argument('-o', '--output_dir', required=True)
+    parser.add_argument('-s', '--skew', action='store_true', default=False,
+                        help='Calculate GC_skew as well')
+    parser.add_argument('-o', '--output_path', required=True)
+
     args = parser.parse_args()
     genomeG = SeqIO.read(args.input_file, "fasta")
     df1 = gc_window(genomeG, args.window)
-    df2 = gc_skew_window(genomeG, args.window)
-    df1.to_csv(path.join(args.output_dir, "GC.tsv"), sep="\t", index=False)
-    df2.to_csv(path.join(args.output_dir, "GC_skew.tsv"), sep="\t", index=False)
+    df1.to_csv(path.join(args.output_path, "GC.tsv"), sep="\t", index=False)
+    if args.skew:
+        df2 = gc_skew_window(genomeG, args.window)
+        df2.to_csv(path.join(args.output_dir, "GC_skew.tsv"), sep="\t", index=False)
