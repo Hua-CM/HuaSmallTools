@@ -91,8 +91,8 @@ def parse_GO_f1(query_line):
     :param query_line: a line in eggNOG annotation file which contains a query result
     :return:  a dict for parse_KO function. eg. {"gene":gene name,"GO": KO}
     """
-    KO_list = [i for i in query_line["GOs"].split(",")]
-    return {"gene": query_line["Query"], "GO": KO_list}
+    GO_list = [i for i in query_line["GOs"].split(",")]
+    return {"gene": query_line["Query"], "GO": GO_list}
 
 
 def parse_GO(df4parse, GO_path):
@@ -104,7 +104,7 @@ def parse_GO(df4parse, GO_path):
     gene2GO = df4parse[["Query", "GOs"]].dropna().apply(parse_GO_f1, axis=1, result_type="expand")
     gene2GO = pd.DataFrame(
         {'gene': gene2GO.gene.repeat(gene2GO["GO"].str.len()), 'GO': np.concatenate(gene2GO["GO"].values)})
-    GO_df = pd.read_csv(GO_path, sep="\t", names=["GO", "Description", "level"])
+    GO_df = pd.read_csv(GO_path, sep="\t", usecols=[0, 2])
     gene2GO = pd.merge(gene2GO, GO_df, on="GO", how="left")
     return gene2GO
 
