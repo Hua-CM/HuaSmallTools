@@ -21,11 +21,12 @@ def main(input_path, output_path):
         cont = True
         cont_num = 0
         append_dict = {}
+        dict_list = []
         while cont:
             cont = f.readline()
             cont_num += 1
             if cont == "\n":
-                go_annotation = go_annotation.append(append_dict, ignore_index=True)
+                dict_list.append(append_dict)
                 append_dict = {}
                 cont_num = 0
                 continue
@@ -48,6 +49,7 @@ def main(input_path, output_path):
                         append_dict.update({"Description": None})
                     elif cont_num == 4:
                         append_dict.update({"level": None})
+        go_annotation = pd.DataFrame(dict_list)
         go_annotation.dropna().to_csv(output_path, sep="\t", index=False)
 
 
