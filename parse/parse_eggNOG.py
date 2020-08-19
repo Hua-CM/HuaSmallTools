@@ -31,7 +31,7 @@ def own_mapdb(org_list):
         map_set = set()
         for org in org_list:
             tmp = get_html("http://rest.kegg.jp/list/pathway/"+org)
-            tmp = map(lambda x: str.split(x, "\t"), tmp.split("\n"))
+            tmp = list(map(lambda x: str.split(x, "\t"), tmp.split("\n")))
             tmp_df = pd.DataFrame(tmp, columns=["pathway", "description"]).dropna()
             map_set = map_set.union(set(tmp_df.pathway.apply(lambda x: re.search("[0-9]{5}", str(x)).group())))
         map_list = list(map(lambda x: "map"+x, list(map_set)))
