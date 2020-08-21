@@ -48,12 +48,12 @@ def get_KEGGmap(own_maplist):
     """
     # KEGG map description
     KEGGmap = get_html("http://rest.kegg.jp/list/pathway/")
-    KEGGmap = map(lambda x: str.split(x, "\t"), KEGGmap.split("\n"))
+    KEGGmap = list(map(lambda x: str.split(x, "\t"), KEGGmap.split("\n")))
     KEGGmap_df = pd.DataFrame(KEGGmap, columns=["pathway", "description"]).dropna()
     KEGGmap_df["pathway"] = KEGGmap_df.pathway.apply(lambda x: str.strip(x, "path:"))
     # KEGG KO2map
     KO2map = get_html("http://rest.kegg.jp/link/pathway/ko")
-    KO2map = map(lambda x: str.split(x, "\t"), KO2map.split("\n"))
+    KO2map = list(map(lambda x: str.split(x, "\t"), KO2map.split("\n")))
     KO2map_df = pd.DataFrame(KO2map, columns=["ko", "pathway"]).dropna()
     KO2map_df["pathway"] = KO2map_df.pathway.apply(lambda x: str.strip(x, "path:"))
     KO2map_df["KO"] = KO2map_df.ko.apply(lambda x: str.strip(x, "ko:"))
