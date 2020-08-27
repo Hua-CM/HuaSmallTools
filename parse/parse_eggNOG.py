@@ -31,7 +31,7 @@ def own_mapdb(org_list):
         map_set = set()
         for org in org_list:
             tmp = get_html("http://rest.kegg.jp/list/pathway/"+org)
-            tmp = list(map(lambda x: str.split(x, "\t"), tmp.split("\n")))
+            tmp = list(map(lambda x: x.split("\t"), tmp.split("\n")))
             tmp_df = pd.DataFrame(tmp, columns=["pathway", "description"]).dropna()
             map_set = map_set.union(set(tmp_df.pathway.apply(lambda x: re.search("[0-9]{5}", str(x)).group())))
         map_list = list(map(lambda x: "map"+x, list(map_set)))
@@ -48,12 +48,12 @@ def get_KEGGmap(own_maplist):
     """
     # KEGG map description
     KEGGmap = get_html("http://rest.kegg.jp/list/pathway/")
-    KEGGmap = list(map(lambda x: str.split(x, "\t"), KEGGmap.split("\n")))
+    KEGGmap = list(map(lambda x: x.split("\t"), KEGGmap.split("\n")))
     KEGGmap_df = pd.DataFrame(KEGGmap, columns=["pathway", "description"]).dropna()
     KEGGmap_df["pathway"] = KEGGmap_df.pathway.apply(lambda x: str.strip(x, "path:"))
     # KEGG KO2map
     KO2map = get_html("http://rest.kegg.jp/link/pathway/ko")
-    KO2map = list(map(lambda x: str.split(x, "\t"), KO2map.split("\n")))
+    KO2map = list(map(lambda x: x.split("\t"), KO2map.split("\n")))
     KO2map_df = pd.DataFrame(KO2map, columns=["ko", "pathway"]).dropna()
     KO2map_df["pathway"] = KO2map_df.pathway.apply(lambda x: str.strip(x, "path:"))
     KO2map_df["KO"] = KO2map_df.ko.apply(lambda x: str.strip(x, "ko:"))
