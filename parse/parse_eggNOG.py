@@ -97,15 +97,16 @@ def parse_GO_f1(query_line):
 
 def parse_GO(df4parse, GO_path):
     """
-    parse the KEGG part in eggNOG annotation file
+    parse the GO part in eggNOG annotation file
     :param df4parse: the pd.Dataframe object directly comes from the eggNOG annotation file(skip the comment lines, of course)
     :return:the parsed GO annotation in pd.Dataframe.
     """
     gene2GO = df4parse[["Query", "GOs"]].dropna().apply(parse_GO_f1, axis=1, result_type="expand")
     gene2GO = pd.DataFrame(
         {'gene': gene2GO.gene.repeat(gene2GO["GO"].str.len()), 'GO': np.concatenate(gene2GO["GO"].values)})
-    GO_df = pd.read_csv(GO_path, sep="\t", usecols=[0, 2])
-    gene2GO = pd.merge(gene2GO, GO_df, on="GO", how="left")
+    go_df = pd.read_table(GO_path)
+    go_df.drop(columns=['Description'], inplace=True)
+    gene2GO = pd.merge(gene2GO, go_df, on="GO", how="left")
     return gene2GO
 
 

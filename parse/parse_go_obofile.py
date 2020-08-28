@@ -17,7 +17,7 @@ def main(input_path, output_path):
     :return: None
     """
     go_annotation = pd.DataFrame(columns=["GO", "Description", "level"])
-    with open(input_path, 'r', encoding='utf8') as f:
+    with open(input_path, 'r') as f:
         cont = True
         cont_num = 0
         append_dict = {}
@@ -50,6 +50,7 @@ def main(input_path, output_path):
                     elif cont_num == 4:
                         append_dict.update({"level": None})
         go_annotation = pd.DataFrame(dict_list)
+        #go_annotation = go_annotation[["GO", "Description", "level"]]
         go_annotation.dropna().to_csv(output_path, sep="\t", index=False)
 
 
