@@ -50,7 +50,7 @@ def main(input_path, output_path):
                     elif cont_num == 4:
                         append_dict.update({"level": None})
         go_annotation = pd.DataFrame(dict_list)
-        #go_annotation = go_annotation[["GO", "Description", "level"]]
+        go_annotation = go_annotation[["GO", "Description", "level"]]
         go_annotation.dropna().to_csv(output_path, sep="\t", index=False)
 
 
