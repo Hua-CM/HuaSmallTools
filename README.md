@@ -1,5 +1,7 @@
 # HuaSmallTools
-This repository contains some home-made bioinformic scripts. 
+This repository contains some home-made bioinformic scripts.
+**NOTICE: All python scripts in this repository were writen in python3!**
+ 
 ## Why I write this repository?
 I am a student working on non-model plants. Unlike model organism, reams of annotation need to be done on non-model plants mannually. So
 I put my home-made scripts in this repository.
