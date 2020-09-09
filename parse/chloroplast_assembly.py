@@ -49,6 +49,6 @@ if __name__ == '__main__':
     seqdict = {}
     for x in SeqIO.parse(args.contigs_fasta, "fasta"):
         seqdict[x.id] = x
-    mummer = pd.read_csv("D:\PyProject\manual.txt", sep="\t", header=None)
+    mummer = pd.read_csv(args.mummer, sep="\t", header=None)
     putative_genome = merge_contigs(mummer, seqdict)
     SeqIO.write(putative_genome, args.putative_genome, "fasta")
