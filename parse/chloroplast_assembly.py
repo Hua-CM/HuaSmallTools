@@ -15,7 +15,7 @@ def extract_seq(seq_dict, contig, start, end):
     if start < end:
         seq = seq_dict[contig].seq[start-1:end]
     else:
-        seq = seq_dict[contig].seq[end-1:start].reverse_complement()
+        seq = seq_dict[contig].seq[end-1:start][::-1]
     return seq
 
 
