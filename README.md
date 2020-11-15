@@ -23,6 +23,8 @@ Parse GO terms in InterPro Scan results.
 Parse Biosample information from the directly downloaded BioProject txt file.
 5. [parse_go_obofile.py](parse/parse_go_obofile.py)  
 Parse GO database OBO file to a more user-friendly format. Some scripts in this repository may use its result.
+5. [parse_go_obofile.py](parse/parse_uniprot_header.py)  
+Parse Uniprot database seq headers. You could use this interpret your BLAST result against Uniprot database
 ### spider
 1. [spider_chinese_name.py](spider/spider_chinese_name.py)  
 Convert plant latin name to chinese name based on [植物智](http://www.iplant.cn/)  
