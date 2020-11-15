@@ -71,7 +71,8 @@ if __name__ == '__main__':
         blast_result = pd.read_table(args.input_file, header=None)
         uniprot_info = pd.read_table(args.uniprot)
         result = pd.merge(blast_result, uniprot_info[['ID', 'GN', 'Description']],
-                          left_on=args.column,
+                          left_on=args.column-1,
                           right_on='ID',
                           how='left')
+        result.drop('ID', axis=1, inplace=True)
         result.to_csv(args.output_file, header=False, index=False, sep='\t')
