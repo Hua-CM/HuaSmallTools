@@ -75,4 +75,4 @@ if __name__ == '__main__':
                           right_on='ID',
                           how='left')
         result.drop('ID', axis=1, inplace=True)
-        result.to_csv(args.output_file, header=False, index=False, sep='\t')
+        result.to_csv(args.output_file, header=False, index=False, sep='\t', float_format='%.3g')
