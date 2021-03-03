@@ -6,10 +6,9 @@
 # @Note:
 # @E-mail: njbxhzy@hotmail.com
 
-from os import path
 from Bio.SeqUtils import GC, GC_skew
 from Bio import SeqIO
-from pandas import DataFrame
+from pandas import DataFrame, concat
 
 
 def gc_window(genome, window=1000):
@@ -71,8 +70,11 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output_path', required=True)
 
     args = parser.parse_args()
-    genomeG = SeqIO.read(args.input_file, "fasta")
-    df1 = gc_window(genomeG, args.window)
+    genomeG = SeqIO.parse(args.input_file, "fasta")
+    scaffold_list = []
+    for _scaffold in genomeG:
+        scaffold_list.append(gc_window(_scaffold, args.window))
+    df1 = concat(scaffold_list)
     df1.to_csv(args.output_path, sep="\t", index=False)
     if args.skew:
         df2 = gc_skew_window(genomeG, args.window)
