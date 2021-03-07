@@ -10,6 +10,7 @@ from Bio.SeqUtils import GC123
 from Bio import SeqIO
 import pandas as pd
 from sequence.calculate_motif import motif123
+import argparse
 
 
 def calculate123(seq_path):
@@ -47,15 +48,33 @@ def calculate_codon_analysis(seq_path):
     return gc_df
 
 
-if __name__ == '__main__':
-    import argparse
+def parse_args():
     parser = argparse.ArgumentParser(description="This is the script for calculate GC123")
     parser.add_argument('-i', '--input_file', required=True,
                         help='<file path>  The cds sequence in fasta format')
+    parser.add_argument('-a', '--ATCG', default=False, action='store_true',
+                        help='calculate A3, T3, G3, C3 as well')
     parser.add_argument('-t', '--out_file', required=True,
                         help='<file path>  A readable table')
     args = parser.parse_args()
-    GC_DF = calculate123(args.input_file)
-    ATCG_DF = calculateATCG3(args.input_file)
-    GC_DF = pd.merge(GC_DF, ATCG_DF, on="seqid")
+    return args
+
+
+def main(args):
+    result_df = []
+    with open(args.input_file) as f:
+        file_list = [_.strip() for _ in f.read().split('\n')]
+    for file in file_list:
+        result_df.append(calculate123(file))
+    GC_DF = pd.concat(result_df)
+    if args.ATCG:
+        result_df2 = []
+        for file in file_list:
+            result_df.append(calculateATCG3(file))
+        GC_DF2 = pd.concat(result_df2)
+        GC_DF = pd.merge(GC_DF, GC_DF2, on='seqid')
     GC_DF.to_csv(args.out_file, sep="\t", index=False)
+
+
+if __name__ == '__main__':
+    main(parse_args())
