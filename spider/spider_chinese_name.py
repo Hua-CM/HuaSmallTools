@@ -8,7 +8,10 @@
 
 import requests
 import re
-from pyquery import PyQuery as pq
+import argparse
+from tqdm import tqdm
+from pyquery import PyQuery as Pq
+from time import sleep
 
 
 def get_html(url):
@@ -17,30 +20,36 @@ def get_html(url):
     return requests.get(url, headers=my_header).text
 
 
-def get_chinese_name(latin_name):
+def get_chinese_name(latin_name, retry_num=0):
+    retry_num += 1
+    if retry_num > 3:
+        return
     query_url = "http://www.iplant.cn/info/" + latin_name
-    a = pq(get_html(query_url))
     try:
-        chinese_name_inner = re.match("[\u4e00-\u9fa5]+", a('head>title').text()).group(0)
-        if chinese_name_inner == "植物智":
-            return
-        return chinese_name_inner
-    except AttributeError:
-        synom_name = a('.infomore>a').text()
-        if not synom_name == '':
-            query_url = "http://www.iplant.cn/info/" + synom_name
-            a = pq(get_html(query_url))
-            try:
-                chinese_name_inner = re.match("[\u4e00-\u9fa5]+", a('head>title').text()).group(0)
-                return chinese_name_inner + "\t" + synom_name
-            except AttributeError:
-                return None
-        else:
-            return
+        a = Pq(get_html(query_url))
+        try:
+            chinese_name_inner = re.match("[\u4e00-\u9fa5]+", a('head>title').text()).group(0)
+            if chinese_name_inner == "植物智":
+                return
+            return chinese_name_inner
+        except AttributeError:
+            synom_name = a('.infomore>a').text()
+            if not synom_name == '':
+                query_url = "http://www.iplant.cn/info/" + synom_name
+                a = Pq(get_html(query_url))
+                try:
+                    chinese_name_inner = re.match("[\u4e00-\u9fa5]+", a('head>title').text()).group(0)
+                    return chinese_name_inner + "\t" + synom_name
+                except AttributeError:
+                    return None
+            else:
+                return
+    except TimeoutError:
+        sleep(1)
+        get_chinese_name(latin_name, retry_num=retry_num)
 
 
-if __name__ == '__main__':
-    import argparse
+def parse_args():
     parser = argparse.ArgumentParser(
         description="This is the script for spider Chinese name from iplants website.")
     parser.add_argument('-i', '--file_path', required=True,
@@ -48,15 +57,20 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--result_path', required=True,
                         help='<file_path>  The result file')
     args = parser.parse_args()
+    return args
+
+
+def main(args):
     result_list = []
     with open(args.file_path, "r") as query_file:
-        while True:
-            query_name = query_file.readline().strip()
-            if query_name:
-                chinese_name = get_chinese_name(query_name)
-                result_list.append(f"{query_name}\t{chinese_name}")
-            else:
-                break
+        query_list = query_file.read().split('n')
+        for query_name in tqdm(query_list):
+            chinese_name = get_chinese_name(query_name)
+            result_list.append(f"{query_name}\t{chinese_name}")
     with open(args.result_path, "w") as result_file:
         result_file.write("\n".join(result_list))
         result_file.close()
+
+
+if __name__ == '__main__':
+    main(parse_args())
