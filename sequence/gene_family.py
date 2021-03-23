@@ -40,7 +40,7 @@ class GeneFamily:
             query=self.seed,
             db=os.path.join(self.tmp_dir, 'database.fasta'),
             evalue='1e-5',
-            outfmt="'6 qacc sacc qlen slen length pident evalue'",
+            outfmt="6 qacc sacc qlen slen length pident evalue",
             max_hsps=1,
             num_threads=threads,
             out=os.path.join(self.tmp_dir, 'blast.tbl')
@@ -48,12 +48,12 @@ class GeneFamily:
         makeblastdb_cline()
         blastp_cline()
         blast_result = pd.read_table(os.path.join(self.tmp_dir, 'blast.tbl'),
-                                     header=False,
+                                     header=None,
                                      names=['qacc', 'sacc', 'qlen', 'slen', 'length', 'pident', 'evalue'])
         blast_result = blast_result[
             (blast_result['pident'] > 50) & (blast_result['length'] / blast_result['slen'] > 0.5)]
         blast_result.to_csv(os.path.join(self.tmp_dir, 'blast2.tbl'), sep='\t', index=False)
-        seq_list = [_ for _ in SeqIO.parse(self.db, ' fasta') if _.id in blast_result['sacc'].to_list()]
+        seq_list = [_ for _ in SeqIO.parse(self.db, 'fasta') if _.id in blast_result['sacc'].to_list()]
         SeqIO.write(seq_list, os.path.join(self.tmp_dir, 'subgenes.fasta'), 'fasta')
 
     @staticmethod
@@ -90,7 +90,7 @@ class GeneFamily:
                   ' -cpu ' + str(threads) +
                   ' -dir ' + _pfam_db +
                   ' -outfile ' + os.path.join(self.tmp_dir, 'sub.tbl'))
-        blast_result = pd.read_table(os.path.join(self.tmp_dir, 'blast2.tbl'), sep='\t', index=False)
+        blast_result = pd.read_table(os.path.join(self.tmp_dir, 'blast2.tbl'))
         query_hmm = pd.read_table(os.path.join(self.tmp_dir, 'query.tbl'),
                                   comment='#',
                                   sep='\\s+',
@@ -116,8 +116,8 @@ class GeneFamily:
             new_list.append({
                 'query': _row['qacc'],
                 'subject': _row['sacc'],
-                'Qoverlap': float(_row['length']) / float(_row['qlen']),
-                'Soverlap': float(_row['length']) / float(_row['slen']),
+                'Qoverlap': round(float(_row['length']) / float(_row['qlen']),2),
+                'Soverlap': round(float(_row['length']) / float(_row['slen']),2),
                 'identity': _row['pident'],
                 'E-value': _row['evalue'],
                 'QPFAM': ' '.join(query_dict.get(_row['qacc'], [])),
