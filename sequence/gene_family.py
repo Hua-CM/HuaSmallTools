@@ -51,7 +51,7 @@ class GeneFamily:
                                      header=None,
                                      names=['qacc', 'sacc', 'qlen', 'slen', 'length', 'pident', 'evalue'])
         blast_result = blast_result[
-            (blast_result['pident'] > 50) & (blast_result['length'] / blast_result['slen'] > 0.5)]
+            (blast_result['pident'] > 50) & (blast_result['length'] / blast_result['slen'] > 0.5) & (blast_result['length'] / blast_result['qlen'] > 0.5)]
         blast_result.to_csv(os.path.join(self.tmp_dir, 'blast2.tbl'), sep='\t', index=False)
         seq_list = [_ for _ in SeqIO.parse(self.db, 'fasta') if _.id in blast_result['sacc'].to_list()]
         SeqIO.write(seq_list, os.path.join(self.tmp_dir, 'subgenes.fasta'), 'fasta')
