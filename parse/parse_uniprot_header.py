@@ -70,6 +70,7 @@ if __name__ == '__main__':
     if args.subcmd == "interpret":
         blast_result = pd.read_table(args.input_file, header=None)
         uniprot_info = pd.read_table(args.uniprot)
+        blast_result[args.column-1] = blast_result[args.column-1].apply(lambda x: x.split('|')[1])
         result = pd.merge(blast_result, uniprot_info[['ID', 'GN', 'Description']],
                           left_on=args.column-1,
                           right_on='ID',
