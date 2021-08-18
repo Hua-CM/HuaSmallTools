@@ -13,7 +13,7 @@ import random
 from collections import OrderedDict, defaultdict
 
 
-def get_fasta_len(_fasta):
+def get_fasta_len(_fasta, chr_num: int):
     with open(_fasta, 'r') as _f_in:
         _fasta = list(line.rstrip() for line in _f_in)
     fasta_dict = defaultdict(str)
@@ -24,7 +24,7 @@ def get_fasta_len(_fasta):
         fasta_dict[scaffold_id] += _line
     len_dict = {_key: len(_value) for _key, _value in fasta_dict.items()}
     ordered_dict = OrderedDict(zip(OrderedDict(sorted(len_dict.items(), key=lambda x: x[1], reverse=True)).keys(),
-                                   ['chr' + str(_) for _ in range(1, len(len_dict)+1)])
+                                   ['chr' + str(_) for _ in range(1, chr_num+1)] + ['scaffold' + str(_) for _ in range(1, len(len_dict)-chr_num+1)])
                                )
     return fasta_dict, ordered_dict
 
@@ -34,7 +34,7 @@ def id_generate(size=6, chars=string.ascii_uppercase):
 
 
 def sort_genome(args):
-    fa_dict, order_dict = get_fasta_len(args.fasta)
+    fa_dict, order_dict = get_fasta_len(args.fasta, args.chr)
     change_dict1 = defaultdict(str)
     change_dict2 = defaultdict(str)
     for raw_, ordered_ in order_dict.items():
@@ -63,7 +63,9 @@ def getArgs():
     parser.add_argument('gff',
                         help="gff file name")
     parser.add_argument('-p', '--prefix', type=str, default="output",
-                        help="prefix for output ")
+                        help="prefix for output")
+    parser.add_argument('-c', '--chr', type=int, default=0,
+                        help="chromosome number. Default: 0 (scaffold level genome)")
     args = parser.parse_args()
     return args
 
