@@ -71,7 +71,7 @@ def getArgs():
 if __name__ == '__main__':
     Args = getArgs()
     fasta, gff = sort_genome(Args)
-    gff.to_csv(Args.prefix + '.gff', sep='\t', index=False)
+    gff.to_csv(Args.prefix + '.gff', sep='\t', index=False, header=False)
     with open(Args.prefix + '.fasta', 'w') as f:
         f.write('\n'.join(['>' + _key + '\n' + _value for _key, _value in fasta.items()]))
         f.write('\n')
