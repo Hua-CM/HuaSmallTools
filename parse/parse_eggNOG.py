@@ -110,10 +110,30 @@ def parse_GO(df4parse, GO_path):
     return gene2GO
 
 
+def check_column(_file):
+    with open(_file) as f_in:
+        while True:
+            line = f_in.readline()
+            if not line.startswith("#"):
+                items = line.split('\t')
+                for _idx in range(len(items)):
+                    if items[_idx].startswith("GO:"):
+                        go_idx =_idx
+                    elif items[_idx].startswith("ko:"):
+                        kegg_idx = _idx
+                return 0, go_idx, kegg_idx
+
+
 def main(input_file, out_dir, go_file, org_list):
-    file4parse = pd.read_csv(input_file, sep="\t", comment="#", usecols=[0, 6, 8], names=['Query', 'GOs', "KEGG_ko"])
+    file4parse = pd.read_csv(input_file,
+                             sep="\t",
+                             comment="#",
+                             usecols=check_column(input_file),
+                             names=['Query', 'GOs', "KEGG_ko"])
     file4KO = parse_KO(file4parse, org_list)[["gene", "KO", "pathway", "description"]]
     file4GO = parse_GO(file4parse, go_file)
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     file4KO.to_csv(os.path.join(out_dir, "KOannotation.tsv"), sep="\t", index=False)
     file4GO.to_csv(os.path.join(out_dir, "GOannotation.tsv"), sep="\t", index=False)
 
