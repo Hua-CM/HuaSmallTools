@@ -23,6 +23,22 @@ class GFF:
         self.__rename__()
         self.__rewrite__(_out)
 
+    @staticmethod
+    def __open_dff__(_gff):
+        with(open(_gff)) as f:
+            gff_dialect = f.readlines()
+        result_list = []
+        for _record in gff_dialect:
+            try:
+                _record = defaultdict(str,
+                                      zip(("seqid", "source", "type", "start", "end", "score", "strand", "phase", "attr"),
+                                           _record.strip().split('\t')))
+                _record['attr'] = {_.split('=')[0]: _.split('=')[1] for _ in _record['attr'].strip(';').split(';')}
+                result_list.append(_record)
+            except:
+                continue
+        return result_list
+
     def __parse_gff__(self, _gff):
         gff_new = pd.read_table(_gff,
                                 header=None,
@@ -46,20 +62,40 @@ class GFF:
         gff_new['type'].cat.reorder_categories(list_custom, inplace=True)
         gff_new.sort_values(['seqid', 'start', 'type'], inplace=True)
         gff_new.to_csv(_gff+'.tmp', sep='\t', index=False, header=False)
+        # unique id
+        tmp_list = self.__open_dff__(_gff + '.tmp')
+        for _idx in range(len(tmp_list)):
+            if tmp_list[_idx]['type'] == 'mRNA':
+                tmp_list[_idx]['attr']['Parent'] = tmp_list [_idx - 1]['attr']['ID']
+        for _idx in range(len(tmp_list)):
+            if tmp_list[_idx]['type'] == 'mRNA':
+                cds_count = 0
+                utr5p_count = 0
+                utr3p_count = 0
+                exon_count = 0
+            elif tmp_list[_idx]['type'] == 'CDS':
+                cds_count += 1
+                tmp_list[_idx]['attr']['ID'] = tmp_list[_idx]['attr']['ID'] + '.' + str(cds_count)
+            elif tmp_list[_idx]['type'] == 'five_prime_UTR':
+                utr5p_count += 1
+                tmp_list[_idx]['attr']['ID'] = tmp_list[_idx]['attr']['ID'] + '.' + str(utr5p_count)
+            elif tmp_list[_idx]['type'] == 'three_prime_UTR':
+                utr3p_count += 1
+                tmp_list[_idx]['attr']['ID'] = tmp_list[_idx]['attr']['ID'] + '.' + str(utr3p_count)
+            elif tmp_list[_idx]['type'] == 'exon':
+                exon_count += 1
+                tmp_list[_idx]['attr']['ID'] = tmp_list[_idx]['attr']['ID'] + '.' + str(exon_count)
+        rewrite_list = []
+        for _record in tmp_list:
+            _record['attr'] = ';'.join([_key + '=' + _value for _key, _value in _record['attr'].items()])
+            rewrite_list.append('\t'.join(_record.values()))
+        rewrite_list = [_.strip('\t') for _ in rewrite_list]
+        with open(_gff + '.tmp', 'w') as f_out:
+            f_out.write('\n'.join(rewrite_list))
+            f_out.write('\n')
         # parse
-        with(open(_gff+'.tmp')) as f:
-            gff_dialect = f.readlines()
-        result_list = []
-        for _record in gff_dialect:
-            try:
-                _record = defaultdict(str,
-                                      zip(("seqid", "source", "type", "start", "end", "score", "strand", "phase", "attr"),
-                                           _record.strip().split('\t')))
-                _record['attr'] = {_.split('=')[0]: _.split('=')[1] for _ in _record['attr'].strip(';').split(';')}
-                result_list.append(_record)
-            except:
-                continue
-        remove(_gff+'.tmp')
+        result_list = self.__open_dff__(_gff + '.tmp')
+        remove(_gff + '.tmp')
         return result_list
 
     def __record_name__(self):
@@ -114,12 +150,12 @@ class GFF:
             parent_dict[_key] = mrna_id
         for _key in self.__dialect__[4].keys():
             mrna_id = self.__dialect__[1][self.__dialect__[4][_key]]
-            count_dict2[mrna_id] += 1
-            self.__dialect__[4][_key] = mrna_id + 'utr3p1' + str(count_dict3[mrna_id])
+            count_dict3[mrna_id] += 1
+            self.__dialect__[4][_key] = mrna_id + 'utr3p' + str(count_dict3[mrna_id])
             parent_dict[_key] = mrna_id
         for _key in self.__dialect__[5].keys():
             mrna_id = self.__dialect__[1][self.__dialect__[5][_key]]
-            count_dict2[mrna_id] += 1
+            count_dict4[mrna_id] += 1
             self.__dialect__[5][_key] = mrna_id + 'utr5p' + str(count_dict4[mrna_id])
             parent_dict[_key] = mrna_id
         self.__dialect__ = ({_key: _value for dic in self.__dialect__ for _key, _value in dic.items()}, parent_dict)
