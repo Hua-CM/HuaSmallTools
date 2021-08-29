@@ -118,9 +118,10 @@ def check_column(_file):
                 items = line.split('\t')
                 for _idx in range(len(items)):
                     if items[_idx].startswith("GO:"):
-                        go_idx =_idx
+                        go_idx = _idx
                     elif items[_idx].startswith("ko:"):
                         kegg_idx = _idx
+            if 'go_idx' in locals() and 'kegg_idx' in locals():
                 return 0, go_idx, kegg_idx
 
 
