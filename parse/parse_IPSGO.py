@@ -15,13 +15,14 @@ def get_gene2go(input_file):
     :param input_file: InterProscan result file
     :return: gene-go id mapping DataFrame. columns ["gene","GO term"]
     """
-    pas = pd.read_csv(input_file, sep="\t", names=[i for i in range(1, 15)]).dropna()
+    pas = pd.read_csv(input_file, sep="\t", header=None)
     go_list = pd.DataFrame(columns=["gene", "GO_num"])
     for _ in range(pas.__len__()):
         trans, go_num = pas.iloc[_, 0], pas.iloc[_, 13]
-        for i in go_num.split("|"):
-            tmp_dict = {"gene": trans, "GO_num": i}
-            go_list = go_list.append(tmp_dict, ignore_index=True)
+        if isinstance(go_num, str):
+            for i in go_num.split("|"):
+                tmp_dict = {"gene": trans, "GO_num": i}
+                go_list = go_list.append(tmp_dict, ignore_index=True)
     return go_list
 
 
