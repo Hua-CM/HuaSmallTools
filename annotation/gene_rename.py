@@ -176,7 +176,7 @@ class GFF:
 def getArgs():
     parser = argparse.ArgumentParser(description="Convert gene id in gff file from EVM into readble format")
     parser.add_argument('gff', help="gff file")
-    parser.add_argument('-p', '--prefix', type=str, required=True, help="gff file name")
+    parser.add_argument('-p', '--prefix', type=str, required=True, help="Gene prefix")
     parser.add_argument('-c', '--chromosome', dest="chr", type=str, default='chr',
                         help="chromosome sequence prefix. Default:chr")
     parser.add_argument('-s', '--scaffold', type=str, default='scaffold',
