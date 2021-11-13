@@ -151,12 +151,12 @@ class GFF:
         for _key in self.__dialect__[4].keys():
             mrna_id = self.__dialect__[1][self.__dialect__[4][_key]]
             count_dict3[mrna_id] += 1
-            self.__dialect__[4][_key] = mrna_id + 'utr3p' + str(count_dict3[mrna_id])
+            self.__dialect__[4][_key] = mrna_id + '.utr3p' + str(count_dict3[mrna_id])
             parent_dict[_key] = mrna_id
         for _key in self.__dialect__[5].keys():
             mrna_id = self.__dialect__[1][self.__dialect__[5][_key]]
             count_dict4[mrna_id] += 1
-            self.__dialect__[5][_key] = mrna_id + 'utr5p' + str(count_dict4[mrna_id])
+            self.__dialect__[5][_key] = mrna_id + '.utr5p' + str(count_dict4[mrna_id])
             parent_dict[_key] = mrna_id
         self.__dialect__ = ({_key: _value for dic in self.__dialect__ for _key, _value in dic.items()}, parent_dict)
 

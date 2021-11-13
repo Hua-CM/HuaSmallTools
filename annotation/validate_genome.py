@@ -49,11 +49,13 @@ def correct_stop_codon(gene, scaffold_seq):
     cds_features = [_ for _ in _gene.sub_features[0].sub_features if _.type == "CDS"]
     cds_features.sort(key=lambda x: x.location.start)
     cds_seq_full_length = Seq('')
+    extention_len = 0
     if _gene.strand == 1:
         for _feature in cds_features[:-1]:
             cds_seq_full_length += _feature.location.extract(scaffold_seq.seq)
         # extension
         while True:
+            extention_len += 3
             cds_features[-1].location = FeatureLocation(cds_features[-1].location.start,
                                                         cds_features[-1].location.end + 3,
                                                         strand=1)
@@ -62,7 +64,10 @@ def correct_stop_codon(gene, scaffold_seq):
                 cds_seq_test.translate(cds=True)
                 break
             except TranslationError:
-                continue
+                if extention_len > 3000:
+                    break
+                else:
+                    continue
         # modify_gene
         new_sub_features = []
         for _ in _gene.sub_features[0].sub_features:
@@ -80,6 +85,7 @@ def correct_stop_codon(gene, scaffold_seq):
         for _feature in cds_features[:-1]:
             cds_seq_full_length += _feature.location.extract(scaffold_seq.seq)
         while True:
+            extention_len += 3
             cds_features[-1].location = FeatureLocation(cds_features[-1].location.start - 3,
                                                         cds_features[-1].location.end,
                                                         strand=-1)
@@ -88,7 +94,10 @@ def correct_stop_codon(gene, scaffold_seq):
                 cds_seq_test.translate(cds=True)
                 break
             except TranslationError:
-                continue
+                if extention_len > 3000:
+                    break
+                else:
+                    continue
         # modify_gene
         new_sub_features = []
         for _ in _gene.sub_features[0].sub_features:
@@ -110,11 +119,13 @@ def correct_start_codon(gene, scaffold_seq):
     cds_features = [_ for _ in _gene.sub_features[0].sub_features if _.type == "CDS"]
     cds_features.sort(key=lambda x: x.location.start)
     if _gene.strand == 1:
+        extention_len = 0
         while True:
+            extention_len += 3
             _start_pos = cds_features[0].location.start
             cds_features[0].location = FeatureLocation(_start_pos-3, cds_features[0].location.end, strand=1)
             _codon = scaffold_seq.seq[_start_pos-3: _start_pos]
-            if _codon in start_codon:
+            if _codon in start_codon or extention_len > 3000:
                 break
             if _codon in stop_codon:
                 raise TranslationError('First codon could not be found')
@@ -131,11 +142,13 @@ def correct_start_codon(gene, scaffold_seq):
                                                          _gene.sub_features[0].location.end,
                                                          strand=1)
     else:
+        extention_len = 0
         while True:
+            extention_len += 3
             _start_pos = cds_features[-1].location.end
             cds_features[-1].location = FeatureLocation(cds_features[-1].location.start, _start_pos + 3, strand=-1)
-            _codon = scaffold_seq.seq[_start_pos: _start_pos+3].reverse_complement()
-            if _codon in start_codon:
+            _codon = scaffold_seq.seq[_start_pos: _start_pos + 3].reverse_complement()
+            if _codon in start_codon or extention_len > 3000:
                 break
             if _codon in stop_codon:
                 raise TranslationError('First codon could not be found')
@@ -233,12 +246,16 @@ def correct(_gff, _genome):
             except TranslationError as e:
                 try:
                     if e.args[0].startswith("First codon"):
-                        correct_scaffold.features.append(correct_start_codon(gene, scaffold))
+                        _tmp_gene = correct_start_codon(gene, scaffold)
+                        get_cds(_tmp_gene, scaffold)
+                        correct_scaffold.features.append(_tmp_gene)
                         error_dict.setdefault('corrected', []).append(gene.id)
                     elif e.args[0].startswith('The phase of first CDS is not 0'):
                         correct_scaffold.features.append(correct_phase(gene, scaffold))
                         error_dict.setdefault('corrected', []).append(gene.id)
                     elif e.args[0].endswith("is not a stop codon"):
+                        _tmp_gene = correct_start_codon(gene, scaffold)
+                        get_cds(_tmp_gene, scaffold)
                         correct_scaffold.features.append(correct_stop_codon(gene, scaffold))
                         error_dict.setdefault('corrected', []).append(gene.id)
                     # can not handle for now
@@ -251,13 +268,13 @@ def correct(_gff, _genome):
                         correct_scaffold.features.append(e2.args[1])
                         error_dict.setdefault('phase', []).append(gene.id)
                     # for second round
-                    elif e.args[0] == "Extra in frame stop codon found":
+                    elif e2.args[0] == "Extra in frame stop codon found":
                         error_dict.setdefault('internal', []).append(gene.id)
-                    elif e2.args[0].startswith('First codon could not be found'):
+                    elif e2.args[0].startswith('First codon'):
                         error_dict.setdefault('first2', []).append(gene.id)
-                    elif e.args[0].endswith("is not a stop codon"):
+                    elif e2.args[0].endswith("is not a stop codon"):
                         error_dict.setdefault('final', []).append(gene.id)
-                    elif e.args[0].endswith("is not a multiple of three"):
+                    elif e2.args[0].endswith("is not a multiple of three"):
                         error_dict.setdefault('three', []).append(gene.id)
             except Exception as e:
                 print(e)
