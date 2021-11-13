@@ -33,9 +33,9 @@ def convert_ncbi(input_file, output_file):
 def convert_ena(input_file, output_file):
     with open(input_file, "r") as num_list:
         for sra_number in num_list:
-            srr_list = get_html(f"https://www.ebi.ac.uk/ena/data/warehouse/filereport?accession={sra_number.strip()}&result=read_run&fields=fastq_ftp")
+            srr_list = get_html(f"https://www.ebi.ac.uk/ena/portal/api/search?query=run_accession=%22{sra_number.strip()}%22&result=read_run&fields=fastq_aspera")
             srr_list = list(chain.from_iterable([x.split('\t')[1].split(";") for x in srr_list.split("\n")[1:-1]]))
-            srr_list = [re.sub("ftp\\.sra\\.ebi\\.ac\\.uk", "era-fasp@fasp.sra.ebi.ac.uk:", x) for x in srr_list]
+            #srr_list = [re.sub("ftp\\.sra\\.ebi\\.ac\\.uk", "era-fasp@fasp.sra.ebi.ac.uk:", x) for x in srr_list]
             with open(output_file, "a") as f:
                 f.writelines("\n".join([sra_number.strip() + "\t" + x for x in srr_list]) + "\n")
 

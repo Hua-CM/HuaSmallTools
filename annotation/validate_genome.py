@@ -134,7 +134,7 @@ def correct_start_codon(gene, scaffold_seq):
         while True:
             _start_pos = cds_features[-1].location.end
             cds_features[-1].location = FeatureLocation(cds_features[-1].location.start, _start_pos + 3, strand=-1)
-            _codon = scaffold_seq.seq[_start_pos - 3: _start_pos].reverse_complement()
+            _codon = scaffold_seq.seq[_start_pos: _start_pos+3].reverse_complement()
             if _codon in start_codon:
                 break
             if _codon in stop_codon:
