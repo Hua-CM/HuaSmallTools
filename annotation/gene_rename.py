@@ -66,7 +66,7 @@ class GFF:
         tmp_list = self.__open_dff__(_gff + '.tmp')
         for _idx in range(len(tmp_list)):
             if tmp_list[_idx]['type'] == 'mRNA':
-                tmp_list[_idx]['attr']['Parent'] = tmp_list [_idx - 1]['attr']['ID']
+                tmp_list[_idx]['attr']['Parent'] = tmp_list[_idx - 1]['attr']['ID']
         for _idx in range(len(tmp_list)):
             if tmp_list[_idx]['type'] == 'mRNA':
                 cds_count = 0
