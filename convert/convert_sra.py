@@ -9,6 +9,7 @@
 import pandas as pd
 import requests
 from pyquery import PyQuery as PQ
+from tqdm import tqdm
 import re
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"}
@@ -24,16 +25,19 @@ def parse_ncbi(_input_file, _output_file):
         srx_par = re.compile(r"[DES]RX(\d{6,8})")
         srs_par = re.compile(r"[DES]RS(\d{6,8})")
         _result_list = []
-        for line in num_list:
-            web_parser = PQ(get_html("https://www.ncbi.nlm.nih.gov/sra/?term=" + line.strip()).content, parser='html')
-            _srp = web_parser('div #ResultView>div:eq(2)>span>div>a:eq(1)').text()
-            _srx = re.search(srx_par, web_parser('p').text()).group()
-            _srs = re.search(srs_par, web_parser('div #ResultView>div:eq(3)>span>div').text()).group()
-            _org = web_parser('div #ResultView>div:eq(3)>div').text().replace('Organism: ', '')
-            _srr, _spots, _bases, _size, *_ = web_parser('div #ResultView>table>tbody').text().split('\n')
-            _result_dict = {'organism': _org, 'srp_acc': _srp, 'srx_acc': _srx, 'srs_acc': _srs, 'srr_acc': _srr,
-                            'spots': _spots, 'bases(G)': _bases, 'size': _size}
-            _result_list.append(_result_dict)
+        for line in tqdm(num_list):
+            try:
+                web_parser = PQ(get_html("https://www.ncbi.nlm.nih.gov/sra/?term=" + line.strip()).content, parser='html')
+                _srp = web_parser('div #ResultView>div:eq(2)>span>div>a:eq(1)').text()
+                _srx = re.search(srx_par, web_parser('p').text()).group()
+                _srs = re.search(srs_par, web_parser('div #ResultView>div:eq(3)>span>div').text()).group()
+                _org = web_parser('div #ResultView>div:eq(3)>div').text().replace('Organism: ', '')
+                _srr, _spots, _bases, _size, *_ = web_parser('div #ResultView>table>tbody').text().split('\n')
+                _result_dict = {'organism': _org, 'srp_acc': _srp, 'srx_acc': _srx, 'srs_acc': _srs, 'srr_acc': _srr,
+                                'spots': _spots, 'bases(G)': _bases, 'size': _size}
+                _result_list.append(_result_dict)
+            except:
+                continue
         pd.DataFrame(_result_list).to_csv(_output_file, sep='\t', index=False)
 
 
