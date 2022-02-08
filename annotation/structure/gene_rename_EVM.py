@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/8/17 21:13
 # @Author  : Zhongyi Hua
-# @File    : gene_rename.py
+# @File    : gene_rename_EVM.py
 # @Usage   :
 # @Note    : 
 # @E-mail  : njbxhzy@hotmail.com
