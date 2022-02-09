@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/3/23 10:37
 # @Author  : Zhongyi Hua
-# @File    : gene_family.py
+# @File    : gene_family_one_way.py
 # @Usage   :
 # @Note    : 
 # @E-mail  : njbxhzy@hotmail.com
