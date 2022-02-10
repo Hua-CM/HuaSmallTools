@@ -6,39 +6,43 @@
 # @Note:
 # @E-mail: njbxhzy@hotmail.com
 
-from Bio.Blast.Applications import NcbiblastpCommandline
 import argparse
 import gzip
 import json
+import subprocess as sp
+import os
 from collections import defaultdict
 
 
-def blast_wrapper(_query, _db, _out, _threads, _top):
-    cline = NcbiblastpCommandline(
-        query=_query,
-        db=_db,
-        evalue=0.001,
-        max_hsps=1,
-        num_threads=_threads,
-        max_target_seqs=_top,
-        out=_out,
-        outfmt="6 qseqid sseqid")
-    cline()
+def mmseqs_wrapper(_query, _db, _threads, _tmp, _top):
+    # using 'tmp' as tmp
+    sp.run(['mmseqs', 'createdb', _query, os.path.join(_tmp, 'queryDB')])
+    sp.run(['mmseqs', 'search', os.path.join(_tmp, 'queryDB'), _db, os.path.join(_tmp, 'resultDB'), _tmp,
+            '-s', '7',
+            '--threads', str(_threads),
+            '-e', '1e-3',
+            '--max-seqs', str(_top)])
+    sp.run(['mmseqs', 'convertalis',
+            os.path.join(_tmp, 'queryDB'),
+            _db,
+            os.path.join(_tmp, 'resultDB'),
+            os.path.join(_tmp, 'tmp.out'),
+            '--format-mode', '0', '--format-output', 'query,target'])
 
 
-def parse_result(_blast, _map):
-    res_dict = defaultdict()
+def parse_result(_mmeseq, _map, _out):
+    res_dict = defaultdict(set)
     res_list = []
     with gzip.open(_map, 'r') as f_in:
         map_dict = json.loads(f_in.read())
-    with open(_blast, 'r') as f_in:
+    with open(_mmeseq, 'r') as f_in:
         for line in f_in.readlines():
-            _query, _suject = line.split()
-            if go := map_dict.get(_suject):
-                res_dict.setdefault(_query, set()).add(set(go))
+            _query, _subject = line.strip().split()
+            if go := map_dict.get(_subject):
+                res_dict[_query] = res_dict[_query].union(set(go))
     for _gene, _go_set in res_dict.items():
         res_list += [_gene + '\t' + _go for _go in list(_go_set)]
-    with open(_blast, 'w') as f_out:
+    with open(_out, 'w') as f_out:
         f_out.write('\n'.join(res_list))
 
 
@@ -61,8 +65,11 @@ def parse_args():
 
 
 def main(args):
-    blast_wrapper(args.input, args.db, args.output, args.threads, args.top)
-    parse_result(args.output, args.map)
+    tmp_dir = os.path.join(os.getcwd(), 'tmp')
+    if not os.path.exists(tmp_dir):
+        os.mkdir(tmp_dir)
+    mmseqs_wrapper(args.input, args.db, args.threads, tmp_dir, args.top)
+    parse_result(os.path.join(tmp_dir, 'tmp.out'), args.map, args.output)
 
 
 if __name__ == '__main__':
