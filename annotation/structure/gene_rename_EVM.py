@@ -45,7 +45,7 @@ class GFF:
                                 names=("seqid", "source", "type", "start", "end", "score", "strand", "phase", "attr"))
         gff_new[['seqid', 'type']] = gff_new[['seqid', 'type']].astype('category')
         # feature order
-        list_custom = ['gene', 'mRNA', 'five_prime_UTR', 'exon', 'CDS', 'three_prime_UTR']
+        list_custom = ['gene', 'mRNA', 'exon', 'CDS']
         # get correct chromosome order
         list_seq = list(gff_new['seqid'].unique())
         ## chromosome first
@@ -58,8 +58,8 @@ class GFF:
         scaffold = [self.scaf + str(_) for _ in scaffold]
         list_seq = chromo + scaffold
         # sort
-        gff_new['seqid'].cat.reorder_categories(list_seq, inplace=True)
-        gff_new['type'].cat.reorder_categories(list_custom, inplace=True)
+        gff_new['seqid'] = gff_new['seqid'].cat.reorder_categories(list_seq)
+        gff_new['type'] = gff_new['type'].cat.reorder_categories(list_custom)
         gff_new.sort_values(['seqid', 'start', 'type'], inplace=True)
         gff_new.to_csv(_gff+'.tmp', sep='\t', index=False, header=False)
         # unique id

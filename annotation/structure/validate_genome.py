@@ -294,6 +294,11 @@ def correct_phase(mRNA, scaffold_seq):
 
 
 def correct(_gff, _genome):
+    """
+    :param _gff: gff path
+    :param _genome: fasta path
+    :return:
+    """
     _seqs = SeqIO.to_dict(SeqIO.parse(_genome, 'fasta'))
     _gff = [_ for _ in GFF.parse(_gff, base_dict=_seqs)]
     correct_list = []
@@ -367,6 +372,13 @@ def correct(_gff, _genome):
                 correct_gene.location = FeatureLocation(gene_start, gene_end, strand=correct_gene.strand)
                 correct_scaffold.features.append(correct_gene)
         correct_list.append(correct_scaffold)
+    # tidy correct list
+    for scaffold in correct_list:
+        for gene in scaffold.features:
+            for mRNA in gene.sub_features:
+                for ele in mRNA.sub_features:
+                    if ele.sub_features:
+                        ele.sub_features = []
     return correct_list, gene_error_dict
 
 
