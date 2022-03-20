@@ -42,7 +42,8 @@ class GFF:
     def __parse_gff__(self, _gff):
         gff_new = pd.read_table(_gff,
                                 header=None,
-                                names=("seqid", "source", "type", "start", "end", "score", "strand", "phase", "attr"))
+                                names=("seqid", "source", "type", "start", "end", "score", "strand", "phase", "attr"),
+                                comment="#")
         gff_new[['seqid', 'type']] = gff_new[['seqid', 'type']].astype('category')
         # feature order
         list_custom = ['gene', 'mRNA', 'exon', 'CDS']
