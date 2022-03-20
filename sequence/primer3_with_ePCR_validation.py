@@ -11,8 +11,7 @@ from tempfile import mktemp
 import subprocess as sp
 import argparse
 import os
-import re
-from collections import deque, defaultdict
+from collections import deque
 
 
 def del_dir(_dir):
@@ -39,6 +38,11 @@ def get_seq(_seq, _start, _end, _product):
 
 class Primer3:
     def __init__(self, _infodf, _tmp, _primer_bin):
+        """
+        :param _infodf: pd.Dataframe contain AT LEAST five columns: 'seqid', 'start', 'end', 'minsize', 'maxsize'
+        :param _tmp:
+        :param _primer_bin:
+        """
         self.infodf = _infodf
         self.bin = _primer_bin
         self.p3in = mktemp(dir=_tmp)
@@ -186,8 +190,8 @@ def main(args):
     repcr = rePCR(sts_file_path, args.fahash, args.tmp, args.epcr)
     tb_validate = repcr.validate()
     tb_final = tb_validate.merge(tb_sts, how='left').merge(tb_p3out, how='left').merge(INFO, how='left')
-    tb_final[['seqid', 'start', 'end', 'ProductSize2', 'Forward', 'Forward_position', 'Forward_position2',
-              'Forward_length', 'Forward_TM', 'Reverse', 'Reverse_position', 'Reverse_position2', 'Reverse_length', 'Reverse_TM',
+    tb_final[['seqid', 'start', 'end', 'ProductSize2', 'Forward', 'Forward_position2',
+              'Forward_length', 'Forward_TM', 'Reverse', 'Reverse_position2', 'Reverse_length', 'Reverse_TM',
               'count']].to_csv(args.output, sep='\t', index=False)
     del_dir(args.tmp)
 
@@ -210,7 +214,7 @@ def parseArgs():
     parser.add_argument('--primer3', default='primer3_core',
                         help='<file path> The primer3_core bin path (if it not in PATH)')
     parser.add_argument('--tmp', default='',
-                        help='<directory path> The primer3_core bin path (if it not in PATH)')
+                        help='<directory path> The temporary directory Default: system temporary directory')
     parser.add_argument('-o', '--output', required=True,
                         help='<file path>  The output path')
     args = parser.parse_args()

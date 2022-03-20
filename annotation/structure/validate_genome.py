@@ -277,7 +277,7 @@ def correct_phase(mRNA, scaffold_seq):
                                                          _mRNA.location.end,
                                                          strand=1)
     else:
-        for _ in _mRNA.sub_features[0].sub_features:
+        for _ in _mRNA.sub_features:
             if _.type == "exon" and _.location.start == cds_features[0].location.start:
                 _.location = cds_features[0].location
             new_sub_features.append(_)
@@ -285,7 +285,8 @@ def correct_phase(mRNA, scaffold_seq):
         _mRNA.sub_features[0].location = FeatureLocation(_mRNA.location.start,
                                                          cds_features[0].location.end,
                                                          strand=-1)
-    _mRNA.sub_features[0].sub_features = new_sub_features
+
+    _mRNA.sub_features = new_sub_features
     try:
         cds_seq_full_length.translate(cds=True)
         return _mRNA
@@ -373,12 +374,6 @@ def correct(_gff, _genome):
                 correct_scaffold.features.append(correct_gene)
         correct_list.append(correct_scaffold)
     # tidy correct list
-    for scaffold in correct_list:
-        for gene in scaffold.features:
-            for mRNA in gene.sub_features:
-                for ele in mRNA.sub_features:
-                    if ele.sub_features:
-                        ele.sub_features = []
     return correct_list, gene_error_dict
 
 
