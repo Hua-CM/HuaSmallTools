@@ -34,15 +34,18 @@ def rename(_gff, _out, _chr, _scaffold, _prefix):
     _gff = [_ for _ in GFF.parse(_gff)]
     _chr_lst, _scaffold_lst = sort_seq(_gff, _chr, _scaffold)
 
-    def per_seq(_seqrecord, _gene_count, _chr_num):
+    def per_seq(_seqrecord, _gene_count, _chr_num, type):
+        gene_pre = '%s%02dG%05d' if type == _chr else '%s%02dS%05d'
         _seqrecord.features.sort(key=lambda x: x.location.start)
         for _gene in _seqrecord.features:
             _gene_count += 1
             mrna_count = 0
-            _gene.id = '%s%02dG%05d' % (_prefix, _chr_num, _gene_count)
+            _gene.id = gene_pre % (_prefix, _chr_num, _gene_count)
             _gene.qualifiers['ID'] = [_gene.id]
+            _gene.qualifiers.pop('Name', None)
             for _mRNA in _gene.sub_features:
                 mrna_count += 1
+                _mRNA.qualifiers.pop('Name', None)
                 _mRNA.id = _gene.id + '.%d' % mrna_count
                 _mRNA.qualifiers['Parent'] = [_gene.id]
                 _mRNA.qualifiers['ID'] = [_mRNA.id]
@@ -56,10 +59,11 @@ def rename(_gff, _out, _chr, _scaffold, _prefix):
         return _gene_count
 
     gene_count = 0
-    for _idx, _chr in enumerate(_chr_lst):
-        gene_count = per_seq(_chr, gene_count, _idx + 1)
-    for _idx, _chr in enumerate(_scaffold_lst):
-        gene_count = per_seq(_chr, gene_count, len(_chr_lst) + _idx + 1)
+    for _idx, _seq in enumerate(_chr_lst):
+        gene_count = per_seq(_seq, gene_count, _idx + 1, _chr)
+    for _idx, _seq in enumerate(_scaffold_lst):
+        _seq_num = int(re.findall(r'\d+', _seq.id)[0])
+        gene_count = per_seq(_seq, gene_count, _seq_num, _scaffold)
     GFF.write(_chr_lst + _scaffold_lst, open(_out, 'w'), include_fasta=False)
 
 
