@@ -266,26 +266,23 @@ def correct_phase(mRNA, scaffold_seq):
     # modify_gene
     cds_features[0].qualifiers['phase'] = ['0']
     new_sub_features = []
-    # since the distance from exon to UTRs are always greater than 1 bp, we do not take UTR into consideration here
+    # since the distance from exon to UTRs are always greater than 1 bp,
+    # we do not take UTR overlap into consideration here
     if _mRNA.strand == 1:
         for _ in _mRNA.sub_features:
             if _.type == "exon" and _.location.end == cds_features[0].location.end:
                 _.location = cds_features[0].location
             new_sub_features.append(_)
-        _mRNA.location = FeatureLocation(cds_features[0].location.start, _mRNA.location.end, strand=1)
-        _mRNA.sub_features[0].location = FeatureLocation(cds_features[0].location.start,
-                                                         _mRNA.location.end,
-                                                         strand=1)
+        # take 5'UTR location into account
+        new_sub_features.sort(key=lambda x: x.location.start)
+        _mRNA.location = FeatureLocation(new_sub_features[0].location.start, _mRNA.location.end, strand=1)
     else:
         for _ in _mRNA.sub_features:
             if _.type == "exon" and _.location.start == cds_features[0].location.start:
                 _.location = cds_features[0].location
             new_sub_features.append(_)
-        _mRNA.location = FeatureLocation(_mRNA.location.start, cds_features[0].location.end, strand=-1)
-        _mRNA.sub_features[0].location = FeatureLocation(_mRNA.location.start,
-                                                         cds_features[0].location.end,
-                                                         strand=-1)
-
+        new_sub_features.sort(key=lambda x: x.location.end)
+        _mRNA.location = FeatureLocation(_mRNA.location.start, new_sub_features[-1].location.end, strand=-1)
     _mRNA.sub_features = new_sub_features
     try:
         cds_seq_full_length.translate(cds=True)
@@ -336,7 +333,7 @@ def correct(_gff, _genome):
                             correct_gene.sub_features.append(_tmp_mrna)
                             error_dict.setdefault('corrected', []).append(mRNA.id)
                         # can not handle for now
-                        elif e.args[0] == "Extra in frame stop codon found":
+                        elif e.args[0] == "Extra in frame stop codon found.":
                             error_dict.setdefault('internal', []).append(mRNA.id)
                         elif e.args[0].endswith("is not a multiple of three"):
                             error_dict.setdefault('three', []).append(mRNA.id)
