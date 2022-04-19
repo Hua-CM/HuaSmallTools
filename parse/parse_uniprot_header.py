@@ -20,17 +20,26 @@ class UniprotParse:
             _header_list = [line.strip('>') for line in f if line.startswith('>')]
         _header_parse_list = []
         for _header in _header_list:
-            _ele_dict = {'ID': _header.split()[0].split('|')[1],
-                         'Entry': _header.split()[0].split('|')[2]}
-            _description_list = []
-            for _ele in _header.split()[1:]:
-                pre_fix = re.match('OX=|OS=|GN=|PE=|SV=', _ele)
-                if pre_fix:
-                    _ele_dict[pre_fix.group().strip("=")] = _ele.split('=')[1]
+            _ele_dict = {}
+            prefix_pre = None
+            for _ele in _header.split():
+                prefix_now = re.match('sp\||OX=|OS=|GN=|PE=|SV=', _ele)
+                if prefix_now:
+                    prefix_pre = prefix_now.group().strip("=")
+                    try:
+                        _ele_dict[prefix_pre] = [_ele.split('=')[1]]
+                    except IndexError:
+                        _ele_dict[prefix_pre] = [_ele]
                 else:
-                    _description_list.append(_ele)
-            _ele_dict['Description'] = ' '.join(_description_list)
-            _header_parse_list.append(_ele_dict)
+                    _ele_dict[prefix_pre].append(_ele)
+            _ele_dict2 = {}
+            for _key, _value in _ele_dict.items():
+                if _key == 'sp|':
+                    _ele_dict2['ID'], _ele_dict2['Entry'] = _value[0].split('|')[1:3]
+                    _ele_dict2['Description'] = ' '.join(_value[1:])
+                else:
+                    _ele_dict2[_key] = ' '.join(_value)
+            _header_parse_list.append(_ele_dict2)
         self.output = pd.DataFrame(_header_parse_list)
 
 
@@ -70,10 +79,14 @@ if __name__ == '__main__':
     if args.subcmd == "interpret":
         blast_result = pd.read_table(args.input_file, header=None)
         uniprot_info = pd.read_table(args.uniprot)
-        blast_result[args.column-1] = blast_result[args.column-1].apply(lambda x: x.split('|')[1])
-        result = pd.merge(blast_result, uniprot_info[['ID', 'GN', 'Description']],
-                          left_on=args.column-1,
-                          right_on='ID',
-                          how='left')
-        result.drop('ID', axis=1, inplace=True)
-        result.to_csv(args.output_file, header=False, index=False, sep='\t', float_format='%.3g')
+        try:
+            blast_result[args.column-1] = blast_result[args.column-1].apply(lambda x: x.split('|')[1])
+        except:
+            pass
+        finally:
+            result = pd.merge(blast_result, uniprot_info[['ID', 'GN', 'Description']],
+                              left_on=args.column-1,
+                              right_on='ID',
+                              how='left')
+            result.drop('ID', axis=1, inplace=True)
+            result.to_csv(args.output_file, header=False, index=False, sep='\t', float_format='%.3g')
