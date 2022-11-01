@@ -42,7 +42,7 @@ def get_chinese_name(latin_name, retry_num=0):
                 return
     except TimeoutError:
         sleep(1)
-        get_chinese_name(latin_name, retry_num=retry_num)
+        return get_chinese_name(latin_name, retry_num=retry_num)
 
 
 def get_latin_name(chinese_name, retry_num=0):

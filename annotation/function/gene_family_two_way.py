@@ -75,6 +75,7 @@ class GeneFamilyTwoDirect:
             evalue='1e-3',
             outfmt="6 qacc sacc qlen slen length pident evalue",
             max_hsps=1,
+            max_target_seqs=1,
             num_threads=threads,
             out=os.path.join(self.tmp_dir, 'reverse_blast.tbl')
         )
@@ -96,7 +97,7 @@ class GeneFamilyTwoDirect:
         os.system(f"hmmfetch -o {os.path.join(self.tmp_dir, 'query.hmm')} -f {self.pfam} {os.path.join(self.tmp_dir, 'pfam_acc')}")
         os.system(f"hmmpress {os.path.join(self.tmp_dir, 'query.hmm')}")
         # hmmscan
-        os.system(f"hmmscan --cut_ga --notextw --tblout {os.path.join(self.tmp_dir, 'pfam.tbl')} "
+        os.system(f"hmmscan --cut_ga --notextw --cpu {threads} --tblout {os.path.join(self.tmp_dir, 'pfam.tbl')} "
                   f"{os.path.join(self.tmp_dir, 'query.hmm')} "
                   f"{os.path.join(self.tmp_dir, 'putative.fasta')} > /dev/null")
         hmm_result = pd.read_table(os.path.join(self.tmp_dir, 'pfam.tbl'),
@@ -116,7 +117,7 @@ class GeneFamilyTwoDirect:
         if self.domain:  # need Pfam
             set2, hmm_result = self._pfam_iden(threads)
         local_vars = locals()
-        if 'set1' in local_vars and 'set' in local_vars:
+        if 'set1' in local_vars and 'set2' in local_vars:
             gene_set = set1 & set2
         elif 'set1' in local_vars:
             gene_set = set1
@@ -176,7 +177,7 @@ def main(args):
     try:
         if args.seed:
             with open(args.seed) as f_in:
-                seed_lst = [_.strip() for _ in f_in.readlines()]
+                seed_lst = [_.strip() for _ in f_in.read().strip().splitlines()]
         else:
             seed_lst = []
         if args.domain:

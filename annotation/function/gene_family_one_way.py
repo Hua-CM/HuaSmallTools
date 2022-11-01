@@ -30,7 +30,7 @@ class GeneFamily:
         self.db = database
         self.tmp_dir = tmp_dir
 
-    def blast_iden(self, threads=2):
+    def blast_iden(self, threads=4):
         shutil.copyfile(self.db, os.path.join(self.tmp_dir, 'database.fasta'))
         makeblastdb_cline = NcbimakeblastdbCommandline(
             dbtype='prot',
