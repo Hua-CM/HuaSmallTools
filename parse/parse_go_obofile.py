@@ -16,7 +16,7 @@ def main(input_path, output_path):
     :param output_path: result file path.
     :return: None
     """
-    go_annotation = pd.DataFrame(columns=["GO", "Description", "level"])
+    lev_dict = {'molecular_function': 'MF', 'biological_process': 'BP', 'cellular_component': 'CC'}
     with open(input_path, 'r') as f:
         cont = True
         cont_num = 0
@@ -38,10 +38,14 @@ def main(input_path, output_path):
                         b = re.search("name: .*", cont).group()[6:]
                     elif cont_num == 4:
                         c = re.search("namespace: .*", cont).group()[11:]
-                        append_dict = {"GO": a, "Description": b, "level": c}
+                        append_dict = {"GO": a,
+                                       "Description": b,
+                                       "level": lev_dict.get(c)}
                     elif re.match("alt_id", cont).group():
-                        append_dict2 = {"GO": re.search("GO:[0-9]{7}", cont).group(), "Description": b, "level": c}
-                        go_annotation = go_annotation.append(append_dict2, ignore_index=True)
+                        append_dict2 = {"GO": re.search("GO:[0-9]{7}", cont).group(),
+                                        "Description": b,
+                                        "level": lev_dict.get(c)}
+                        dict_list.append(append_dict2)
                 except AttributeError:
                     if cont_num == 2:
                         append_dict.update({"GO": None})

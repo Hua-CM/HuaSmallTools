@@ -97,7 +97,7 @@ class GeneFamilyTwoDirect:
         os.system(f"hmmfetch -o {os.path.join(self.tmp_dir, 'query.hmm')} -f {self.pfam} {os.path.join(self.tmp_dir, 'pfam_acc')}")
         os.system(f"hmmpress {os.path.join(self.tmp_dir, 'query.hmm')}")
         # hmmscan
-        os.system(f"hmmscan --cut_ga --notextw --tblout {os.path.join(self.tmp_dir, 'pfam.tbl')} "
+        os.system(f"hmmscan --cut_ga --notextw --cpu {threads} --tblout {os.path.join(self.tmp_dir, 'pfam.tbl')} "
                   f"{os.path.join(self.tmp_dir, 'query.hmm')} "
                   f"{os.path.join(self.tmp_dir, 'putative.fasta')} > /dev/null")
         hmm_result = pd.read_table(os.path.join(self.tmp_dir, 'pfam.tbl'),
