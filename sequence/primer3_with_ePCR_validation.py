@@ -193,7 +193,7 @@ def main(args):
     tb_final[['seqid', 'start', 'end', 'ProductSize2', 'Forward', 'Forward_position2',
               'Forward_length', 'Forward_TM', 'Reverse', 'Reverse_position2', 'Reverse_length', 'Reverse_TM',
               'count']].to_csv(args.output, sep='\t', index=False)
-    del_dir(args.tmp)
+    #del_dir(args.tmp)
 
 
 def parseArgs():

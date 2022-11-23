@@ -51,7 +51,7 @@ class GeneFamily:
                                      header=None,
                                      names=['qacc', 'sacc', 'qlen', 'slen', 'length', 'pident', 'evalue'])
         blast_result = blast_result[
-            (blast_result['pident'] > 50) & (blast_result['length'] / blast_result['slen'] > 0.5) & (blast_result['length'] / blast_result['qlen'] > 0.5)]
+            (blast_result['pident'] > 40) & (blast_result['length'] / blast_result['slen'] > 0.2) & (blast_result['length'] / blast_result['qlen'] > 0.2)]
         blast_result.to_csv(os.path.join(self.tmp_dir, 'blast2.tbl'), sep='\t', index=False)
         seq_list = [_ for _ in SeqIO.parse(self.db, 'fasta') if _.id in blast_result['sacc'].to_list()]
         SeqIO.write(seq_list, os.path.join(self.tmp_dir, 'subgenes.fasta'), 'fasta')
@@ -138,21 +138,26 @@ def parse_args():
                         help='<dir_path>  The directory containing Pfam-A.hmm')
     parser.add_argument('-o', '--output', required=True,
                         help='<file_path>  output file path')
-    parser.add_argument('-t', '--threads', default=2,
+    parser.add_argument('-@', '--threads', default=2,
                         help='<NUM> number of parallel CPU workers (default:2)')
+    parser.add_argument('-t', '--tmp', default='',
+                        help='<Path> The temporary directory path')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parse_args()
-    tmp_dir = tempfile.mktemp()
+    if args.tmp:
+        tmp_dir = args.tmp
+    else:
+        tmp_dir = tempfile.mktemp()
     os.mkdir(tmp_dir)
     ins = GeneFamily(args.seed, args.database, tmp_dir)
     ins.blast_iden(args.threads)
     result_df = ins.pfam_iden(args.pfam, args.threads)
     result_df.to_csv(args.output, sep='\t', index=False)
-    del_directory(tmp_dir)
+    #del_directory(tmp_dir)
 
 
 if __name__ == '__main__':
