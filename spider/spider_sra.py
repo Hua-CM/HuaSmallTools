@@ -37,7 +37,7 @@ def parse_ncbi(_input_file, _output_file):
     SRS_PAR = re.compile(r"[DES]RS(\d{6,8})")
     with open(_input_file, "r") as num_list:
         _result_list = []
-        for line in tqdm(num_list):
+        for line in num_list:
             try:
                 web_parser = PQ(get_html("https://www.ncbi.nlm.nih.gov/sra/?term=" + line.strip()).content, parser='html')
                 _srp = web_parser('div #ResultView>div:eq(2)>span>div>a:eq(1)').text()
@@ -199,7 +199,7 @@ def parse_sra(_query_list):
                             sra_res_dict['Size']  =  convert_size(_sub_ele.attr.get('total_size'))
                 elif _expele.tag == 'Organism':
                     sra_res_dict['taxid'] = _expele.attr.get('taxid')
-                    sra_res_dict['ScientificName'] = _expele.attr.get('ScientificName')
+                    sra_res_dict['ScientificName'] = _expele.attr.get('ScientificName').strip('"/>')
                 elif _expele.tag == 'Bioproject':
                     sra_res_dict['Bioproject'] = _expele.value
                 elif _expele.tag == 'Biosample':
@@ -210,12 +210,22 @@ def parse_sra(_query_list):
                     sra_res_dict['SRX'] = _expele.attr.get('acc')
                 elif _expele.tag == 'Study':
                     sra_res_dict['SRP'] = _expele.attr.get('acc')
+                elif _expele.tag == 'Library_descriptor':
+                    for _sub_ele in _expele.value:
+                        if _sub_ele.tag == 'LIBRARY_STRATEGY':
+                            sra_res_dict['Library_strategy'] = _sub_ele.value
+                        elif _sub_ele.tag == 'LIBRARY_SOURCE':
+                            sra_res_dict['Library_source'] = _sub_ele.value
+                        elif _sub_ele.tag == 'LIBRARY_NAME':
+                            sra_res_dict['Library_name'] = _sub_ele.value
             sra_res_dict['SRR'] = tmp_res2.attr.get('acc')
             _result_lst.append(sra_res_dict)
         except:
             print(_sra_item.text)
     res_df = pd.DataFrame(_result_lst)
-    res_df = res_df[['ScientificName', 'taxid', 'SRP', 'SRX', 'SRS', 'SRR', 'Bioproject', 'Biosample', 'Bases', 'Size']]
+    res_df = res_df[['ScientificName', 'taxid', 'SRP', 'SRX', 'SRS', 'SRR', 
+                     'Bioproject', 'Biosample', 'Bases', 'Size', 'Library_strategy',
+                     'Library_source', 'Library_name']]
     return res_df
 
 def parse_args():
@@ -239,7 +249,7 @@ def main(args):
     with open(args.input, "r") as f_in:
         acc_lst = f_in.read().strip().splitlines()
     batch_list = [acc_lst[i:i + 100] for i in range(0, len(acc_lst), 100)]
-    for query_lst in batch_list:
+    for query_lst in tqdm(batch_list):
         df_lst.append(parse_sra(query_lst))
         sleep(1)
     res_df = pd.concat(df_lst)
